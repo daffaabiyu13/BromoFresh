@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { products as mockProducts } from '@/data/products';
 import { stockRows as mockStockRows, type StockRow, type StockStatus } from '@/data/mockStock';
-import type { CartItem, CategoryKey, PaymentMethod, Product } from '@/types';
+import type { CartItem, CategoryKey, PaymentMethod, Product, Transaction } from '@/types';
 
 /**
  * Lapisan akses data (React Query + Supabase).
@@ -45,6 +45,7 @@ function mapRowToProduct(row: ProductRow, index: number): Product {
 export const queryKeys = {
   products: ['products'] as const,
   stock: ['stock-products'] as const,
+  transactions: ['transactions'] as const,
 };
 
 /** Hitung status stok dari jumlah & minimum. */
@@ -129,9 +130,10 @@ export function useRecordTransaction() {
       return (tx as { id: string }).id;
     },
     onSuccess: () => {
-      // Stok mungkin berubah setelah penjualan; segarkan daftar produk & stok.
+      // Stok & riwayat mungkin berubah setelah penjualan; segarkan.
       queryClient.invalidateQueries({ queryKey: queryKeys.products });
       queryClient.invalidateQueries({ queryKey: queryKeys.stock });
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions });
     },
   });
 }
@@ -226,5 +228,58 @@ export function useRestock() {
     onSettled: () => {
       if (isSupabaseConfigured) queryClient.invalidateQueries({ queryKey: queryKeys.stock });
     },
+  });
+}
+
+/** Baris tabel `transactions` (dengan nama kasir & jumlah item ter-embed). */
+interface TransactionRow {
+  receipt_no: string;
+  created_at: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  method: PaymentMethod;
+  status: 'selesai' | 'batal';
+  profiles: { name: string } | null;
+  transaction_items: { count: number }[];
+}
+
+function mapRowToTransaction(row: TransactionRow): Transaction {
+  const d = new Date(row.created_at);
+  return {
+    id: row.receipt_no,
+    time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
+    cashier: row.profiles?.name ?? '—',
+    category: '—', // kategori tidak disimpan di header transaksi
+    items: row.transaction_items?.[0]?.count ?? 0,
+    subtotal: Number(row.subtotal),
+    discount: Number(row.discount),
+    total: Number(row.total),
+    method: row.method,
+    status: row.status === 'batal' ? 'Batal' : 'Selesai',
+  };
+}
+
+/**
+ * Riwayat transaksi dari Supabase (terbaru dulu). Bila belum terhubung,
+ * mengembalikan array kosong — layar menggabungkannya dengan riwayat lokal
+ * (Zustand) + data contoh, sehingga demo tetap tampil.
+ */
+export function useTransactions(limit = 50) {
+  return useQuery({
+    queryKey: queryKeys.transactions,
+    queryFn: async (): Promise<Transaction[]> => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase
+        .from('transactions')
+        .select(
+          'receipt_no, created_at, subtotal, discount, total, method, status, profiles(name), transaction_items(count)',
+        )
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data as unknown as TransactionRow[]).map(mapRowToTransaction);
+    },
+    initialData: isSupabaseConfigured ? undefined : [],
   });
 }

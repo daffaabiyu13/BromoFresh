@@ -6,6 +6,8 @@ import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import { generateTransactions, periodData, type ReportPeriod } from '@/data/mockReports';
 import { formatRupiah, formatShort } from '@/utils/format';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { useTransactions } from '@/lib/queries';
 import { useTransactionStore } from '@/store/useTransactionStore';
 import type { Transaction } from '@/types';
 
@@ -29,8 +31,11 @@ export default function LaporanScreen() {
   const [page, setPage] = useState(1);
 
   const recorded = useTransactionStore((s) => s.transactions);
-  // Riwayat: transaksi kasir yang tercatat tampil di depan, disusul data contoh.
-  const allTrx = useMemo(() => [...recorded, ...ALL_TRX], [recorded]);
+  const { data: dbTransactions = [] } = useTransactions();
+  // Sumber transaksi: Supabase bila terhubung, jika tidak riwayat lokal.
+  // Ditampilkan di depan, disusul data contoh.
+  const source = isSupabaseConfigured ? dbTransactions : recorded;
+  const allTrx = useMemo(() => [...source, ...ALL_TRX], [source]);
 
   const data = periodData[period];
 
