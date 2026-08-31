@@ -11,7 +11,7 @@ Repositori ini adalah hasil konversi mockup UI (Kasir, Dashboard, Laporan Penjua
 | **Kasir** | ✅ Fungsional | Grid produk per kategori, pencarian, keranjang (Zustand), metode bayar, struk, toast sukses. Transaksi tersimpan ke riwayat saat "Bayar Sekarang" |
 | **Dashboard** | ✅ Fungsional | KPI cards, grafik penjualan (stacked bar), donut kategori, produk terlaris, alert stok, transaksi terbaru (menampilkan transaksi kasir terbaru) |
 | **Laporan Penjualan** | ✅ Fungsional | Filter periode, KPI, tren penjualan, breakdown kategori, tabel transaksi + pencarian & paginasi |
-| **Manajemen Stok** | ✅ Fungsional | Ringkasan stok, filter kategori & stok kritis, pencarian, tabel produk + status stok, tombol restock (Zustand) |
+| **Manajemen Stok** | ✅ Fungsional | Ringkasan stok, filter kategori & stok kritis, pencarian, tabel produk + status stok, tombol restock (Supabase / mock) |
 | **Laba Rugi** | ✅ Fungsional | Filter periode, KPI, laporan L/R (pendapatan → HPP → laba kotor → biaya operasional → laba bersih), tren laba, margin per kategori, input biaya operasional (Zustand). Khusus Owner |
 | **Audit** | ✅ Fungsional | Tab Log Aktivitas, Opname Stok (selisih & nilai kerugian), Rekonsiliasi Kas. Khusus Owner & Manajer |
 | **Auth** | ✅ Login (mode demo / Supabase) | Guard rute otomatis |
@@ -102,10 +102,15 @@ aplikasi tetap jalan tanpa backend, tanpa mengubah kode layar.
 | Hook | Sumber saat terhubung | Fallback |
 | --- | --- | --- |
 | `useProducts()` | `SELECT` dari `products` | `src/data/products.ts` |
+| `useStockProducts()` | `SELECT` dari `products` (+ HPP, stok) | `src/data/mockStock.ts` |
 | `useRecordTransaction()` | `INSERT` ke `transactions` + `transaction_items` | no-op (riwayat lokal Zustand) |
+| `useRestock()` | `INSERT` `stock_entries` + `UPDATE products.stock` | update cache optimistik saja |
 
-> Layar lain (Dashboard, Laporan, Stok, Laba Rugi, Audit) masih memakai data
-> contoh dan akan dimigrasikan ke lapisan ini pada PR berikutnya.
+Layar yang sudah memakai lapisan ini: **Kasir** (produk + simpan transaksi +
+jumlah produk per kategori dinamis) dan **Stok** (daftar stok + restock).
+
+> Layar Dashboard, Laporan, Laba Rugi, dan Audit masih memakai data contoh dan
+> akan dimigrasikan pada PR berikutnya.
 
 ## 🎨 Desain
 

@@ -4,7 +4,7 @@ import { AppShell } from '@/components/AppShell';
 import { Card } from '@/components/Card';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import type { StockRow, StockStatus } from '@/data/mockStock';
-import { useStockStore } from '@/store/useStockStore';
+import { useRestock, useStockProducts } from '@/lib/queries';
 import { formatRupiah } from '@/utils/format';
 import type { CategoryKey } from '@/types';
 
@@ -28,8 +28,9 @@ const STATUS_STYLE: Record<StockStatus, { bg: string; fg: string; label: string 
 const RESTOCK_QTY = 10;
 
 export default function StokScreen() {
-  const rows = useStockStore((s) => s.rows);
-  const restock = useStockStore((s) => s.restock);
+  // Data stok dari Supabase (atau mock bila belum dikonfigurasi).
+  const { data: rows = [] } = useStockProducts();
+  const restock = useRestock();
 
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
@@ -111,7 +112,13 @@ export default function StokScreen() {
               <Text style={[styles.th, C.aksi]}>Aksi</Text>
             </View>
             {filtered.map((row) => (
-              <StockTableRow key={row.id} row={row} onRestock={() => restock(row.id, RESTOCK_QTY)} />
+              <StockTableRow
+                key={row.id}
+                row={row}
+                onRestock={() =>
+                  restock.mutate({ id: row.id, uuid: row.uuid, qty: RESTOCK_QTY, currentStock: row.stock })
+                }
+              />
             ))}
             {filtered.length === 0 ? (
               <View style={styles.empty}>

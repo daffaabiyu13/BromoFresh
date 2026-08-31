@@ -17,7 +17,7 @@ import { UserPill } from '@/components/UserPill';
 import { categories } from '@/data/products';
 import { palette, radius, spacing } from '@/constants/theme';
 import { formatRupiah, formatReceiptNumber, formatTanggalId } from '@/utils/format';
-import { useProducts, useRecordTransaction } from '@/lib/queries';
+import { deriveCategoryCounts, useProducts, useRecordTransaction } from '@/lib/queries';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useTransactionStore } from '@/store/useTransactionStore';
@@ -54,6 +54,9 @@ export default function KasirScreen() {
   // Data produk dari Supabase (atau mock bila belum dikonfigurasi).
   const { data: allProducts = [], isLoading } = useProducts();
   const recordTx = useRecordTransaction();
+
+  // Jumlah produk per kategori dihitung dari data nyata (bukan angka statis).
+  const categoryCounts = useMemo(() => deriveCategoryCounts(allProducts), [allProducts]);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
@@ -165,7 +168,7 @@ export default function KasirScreen() {
                     {c.label}
                   </Text>
                   <Text style={[styles.catCount, active && { color: 'rgba(255,255,255,0.65)' }]}>
-                    {c.count} produk
+                    {categoryCounts[c.key]} produk
                   </Text>
                 </Pressable>
               );
