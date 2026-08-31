@@ -92,11 +92,26 @@ npm run typecheck
 ## 🔌 Menghubungkan Supabase
 
 1. Buat project di [supabase.com](https://supabase.com).
-2. Jalankan `supabase/schema.sql` di **SQL Editor** (tabel + RLS).
+2. Jalankan `supabase/schema.sql` di **SQL Editor** (tabel + RLS + trigger auto-profil).
 3. Jalankan `supabase/seed.sql` untuk mengisi 34 produk contoh ke tabel `products`.
 4. Salin **Project URL** dan **anon public key** dari Project Settings → API ke `.env`.
 5. Restart Expo. Login kini memakai Supabase Auth, dan **Kasir membaca produk
    dari database serta menyimpan transaksi** (`transactions` + `transaction_items`).
+
+### Menambah pengguna & role
+
+Setiap user baru otomatis mendapat baris `profiles` (via trigger di `schema.sql`),
+dan aplikasi membaca role dari `profiles` sebagai **satu sumber kebenaran**
+(fallback ke `user_metadata` bila profil belum ada).
+
+1. **Authentication → Users → Add user** (email + password, centang *Auto Confirm*).
+2. Set role di **SQL Editor** (cukup satu tempat):
+   ```sql
+   update profiles set role = 'owner', name = 'Budi Santoso'
+   where id = (select id from auth.users where email = 'owner@toko.com');
+   ```
+   Role valid: `owner`, `manajer`, `kasir`, `karyawan`.
+3. **Logout lalu login lagi** di aplikasi agar role terbaru terpakai.
 
 ### Lapisan data (`src/lib/queries.ts`)
 
