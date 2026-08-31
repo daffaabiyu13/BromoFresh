@@ -14,9 +14,10 @@ import { useRouter } from 'expo-router';
 import { Brand } from '@/components/Brand';
 import { NotifButton } from '@/components/NotifButton';
 import { UserPill } from '@/components/UserPill';
-import { categories, productsByCategory } from '@/data/products';
+import { categories } from '@/data/products';
 import { palette, radius, spacing } from '@/constants/theme';
 import { formatRupiah, formatReceiptNumber, formatTanggalId } from '@/utils/format';
+import { useProducts, useRecordTransaction } from '@/lib/queries';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useTransactionStore } from '@/store/useTransactionStore';
@@ -50,12 +51,18 @@ export default function KasirScreen() {
   const placeOrder = useCartStore((s) => s.placeOrder);
   const record = useTransactionStore((s) => s.record);
 
+  // Data produk dari Supabase (atau mock bila belum dikonfigurasi).
+  const { data: allProducts = [], isLoading } = useProducts();
+  const recordTx = useRecordTransaction();
+
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return productsByCategory(category).filter((p) => p.name.toLowerCase().includes(q));
-  }, [category, search]);
+    return allProducts.filter(
+      (p) => p.category === category && p.name.toLowerCase().includes(q),
+    );
+  }, [allProducts, category, search]);
 
   // toast
   const toastY = useRef(new Animated.Value(-80)).current;
@@ -68,12 +75,19 @@ export default function KasirScreen() {
 
   function handlePlaceOrder() {
     if (items.length === 0) return;
-    // Catat transaksi ke riwayat sebelum keranjang dikosongkan.
+    // Catat ke riwayat lokal (tampil di Dashboard/Laporan) sebelum keranjang dikosongkan.
     record({
       receiptNumber,
       items,
       method: paymentMethod,
       cashier: user?.name ?? 'Kasir',
+    });
+    // Persist ke Supabase bila terhubung (no-op di mode demo).
+    recordTx.mutate({
+      receiptNo: formatReceiptNumber(receiptNumber),
+      items,
+      method: paymentMethod,
+      cashierId: user?.id,
     });
     placeOrder();
     showToast();
@@ -160,9 +174,15 @@ export default function KasirScreen() {
 
           {/* Product grid */}
           <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-            {filtered.map((p) => (
-              <ProductCard key={p.id} product={p} qty={qtyOf(p.id)} onAdd={() => addItem(p)} wide={wide} />
-            ))}
+            {isLoading ? (
+              <Text style={styles.gridHint}>Memuat produk…</Text>
+            ) : filtered.length === 0 ? (
+              <Text style={styles.gridHint}>Tidak ada produk pada kategori ini.</Text>
+            ) : (
+              filtered.map((p) => (
+                <ProductCard key={p.id} product={p} qty={qtyOf(p.id)} onAdd={() => addItem(p)} wide={wide} />
+              ))
+            )}
           </ScrollView>
         </View>
 
@@ -388,6 +408,7 @@ const styles = StyleSheet.create({
 
   // grid
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: '2%', rowGap: 10, paddingBottom: 8 },
+  gridHint: { width: '100%', textAlign: 'center', color: palette.muted, fontSize: 13, paddingVertical: 32 },
   prodCard: {
     backgroundColor: palette.white,
     borderWidth: 1.5,
