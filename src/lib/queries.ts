@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { products as mockProducts } from '@/data/products';
 import { stockRows as mockStockRows, type StockRow, type StockStatus } from '@/data/mockStock';
-import type { CartItem, CategoryKey, PaymentMethod, Product, Transaction } from '@/types';
+import { employees as mockEmployees } from '@/data/mockEmployees';
+import type { CartItem, CategoryKey, Employee, PaymentMethod, Product, Transaction, UserRole } from '@/types';
 
 /**
  * Lapisan akses data (React Query + Supabase).
@@ -46,6 +47,7 @@ export const queryKeys = {
   products: ['products'] as const,
   stock: ['stock-products'] as const,
   transactions: ['transactions'] as const,
+  employees: ['employees'] as const,
 };
 
 /** Hitung status stok dari jumlah & minimum. */
@@ -281,5 +283,45 @@ export function useTransactions(limit = 50) {
       return (data as unknown as TransactionRow[]).map(mapRowToTransaction);
     },
     initialData: isSupabaseConfigured ? undefined : [],
+  });
+}
+
+/** Baris tabel `profiles` di Supabase. */
+interface ProfileRow {
+  id: string;
+  name: string;
+  role: UserRole;
+  avatar: string | null;
+  phone: string | null;
+  active: boolean;
+  joined_at: string;
+}
+
+function mapRowToEmployee(row: ProfileRow): Employee {
+  return {
+    id: row.id,
+    name: row.name,
+    role: row.role,
+    avatar: row.avatar ?? '👤',
+    phone: row.phone ?? '-',
+    joinedAt: row.joined_at,
+    active: row.active,
+  };
+}
+
+/** Daftar karyawan (tabel `profiles`). Supabase → mock fallback. */
+export function useEmployees() {
+  return useQuery({
+    queryKey: queryKeys.employees,
+    queryFn: async (): Promise<Employee[]> => {
+      if (!isSupabaseConfigured) return mockEmployees;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, role, avatar, phone, active, joined_at')
+        .order('joined_at');
+      if (error) throw error;
+      return (data as ProfileRow[]).map(mapRowToEmployee);
+    },
+    initialData: isSupabaseConfigured ? undefined : mockEmployees,
   });
 }
