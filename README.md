@@ -13,8 +13,9 @@ Repositori ini adalah hasil konversi mockup UI (Kasir, Dashboard, Laporan Penjua
 | **Laporan Penjualan** | ✅ Fungsional | Filter periode, KPI, tren penjualan, breakdown kategori, tabel transaksi + pencarian & paginasi |
 | **Manajemen Stok** | ✅ Fungsional | Ringkasan stok, filter kategori & stok kritis, pencarian, tabel produk + status stok, tombol restock (Zustand) |
 | **Laba Rugi** | ✅ Fungsional | Filter periode, KPI, laporan L/R (pendapatan → HPP → laba kotor → biaya operasional → laba bersih), tren laba, margin per kategori, input biaya operasional (Zustand). Khusus Owner |
+| **Audit** | ✅ Fungsional | Tab Log Aktivitas, Opname Stok (selisih & nilai kerugian), Rekonsiliasi Kas. Khusus Owner & Manajer |
 | **Auth** | ✅ Login (mode demo / Supabase) | Guard rute otomatis |
-| Audit, Karyawan, Pengaturan | ⏳ Roadmap | Tampil di sidebar sebagai "Segera" |
+| Karyawan, Pengaturan | ⏳ Roadmap | Tampil di sidebar sebagai "Segera" |
 
 > Selama kredensial Supabase belum diisi, aplikasi berjalan memakai **data contoh (mock)** sehingga bisa langsung didemokan tanpa backend.
 
@@ -42,7 +43,8 @@ BromoFresh/
 │       ├── kasir.tsx           # Modul Kasir
 │       ├── laporan.tsx         # Modul Laporan Penjualan
 │       ├── stok.tsx            # Modul Manajemen Stok
-│       └── labarugi.tsx        # Modul Laba Rugi
+│       ├── labarugi.tsx        # Modul Laba Rugi
+│       └── audit.tsx           # Modul Audit
 ├── src/
 │   ├── components/             # Komponen UI bersama
 │   │   ├── charts/             # StackedBarChart, DonutChart

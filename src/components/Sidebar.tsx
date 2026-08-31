@@ -6,7 +6,7 @@ import { criticalCount } from '@/data/mockStock';
 interface NavItem {
   label: string;
   icon: string;
-  href?: '/dashboard' | '/kasir' | '/laporan' | '/stok' | '/labarugi';
+  href?: '/dashboard' | '/kasir' | '/laporan' | '/stok' | '/labarugi' | '/audit';
   alert?: number;
   group: 'Menu' | 'Manajemen';
 }
@@ -21,7 +21,7 @@ const NAV: NavItem[] = [
   { label: 'Laporan', icon: '📊', href: '/laporan', group: 'Menu' },
   { label: 'Stok', icon: '📦', href: '/stok', alert: criticalCount(), group: 'Menu' },
   { label: 'Laba Rugi', icon: '💵', href: '/labarugi', group: 'Menu' },
-  { label: 'Audit', icon: '📄', group: 'Menu' },
+  { label: 'Audit', icon: '📄', href: '/audit', group: 'Menu' },
   { label: 'Karyawan', icon: '👥', group: 'Manajemen' },
   { label: 'Pengaturan', icon: '⚙️', group: 'Manajemen' },
 ];
