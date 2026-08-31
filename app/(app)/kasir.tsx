@@ -19,6 +19,7 @@ import { palette, radius, spacing } from '@/constants/theme';
 import { formatRupiah, formatReceiptNumber, formatTanggalId } from '@/utils/format';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCartStore } from '@/store/useCartStore';
+import { useTransactionStore } from '@/store/useTransactionStore';
 import type { CategoryKey, PaymentMethod, Product } from '@/types';
 
 const PAYMENT_TABS: { key: PaymentMethod; label: string }[] = [
@@ -47,6 +48,7 @@ export default function KasirScreen() {
   const receiptNumber = useCartStore((s) => s.receiptNumber);
   const txCount = useCartStore((s) => s.txCount);
   const placeOrder = useCartStore((s) => s.placeOrder);
+  const record = useTransactionStore((s) => s.record);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
@@ -66,6 +68,13 @@ export default function KasirScreen() {
 
   function handlePlaceOrder() {
     if (items.length === 0) return;
+    // Catat transaksi ke riwayat sebelum keranjang dikosongkan.
+    record({
+      receiptNumber,
+      items,
+      method: paymentMethod,
+      cashier: user?.name ?? 'Kasir',
+    });
     placeOrder();
     showToast();
   }

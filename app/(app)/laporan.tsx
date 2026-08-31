@@ -6,6 +6,7 @@ import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import { generateTransactions, periodData, type ReportPeriod } from '@/data/mockReports';
 import { formatRupiah, formatShort } from '@/utils/format';
+import { useTransactionStore } from '@/store/useTransactionStore';
 import type { Transaction } from '@/types';
 
 const PERIOD_TABS: { key: ReportPeriod; label: string }[] = [
@@ -27,6 +28,10 @@ export default function LaporanScreen() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
+  const recorded = useTransactionStore((s) => s.transactions);
+  // Riwayat: transaksi kasir yang tercatat tampil di depan, disusul data contoh.
+  const allTrx = useMemo(() => [...recorded, ...ALL_TRX], [recorded]);
+
   const data = periodData[period];
 
   const catBreakdown = useMemo(() => {
@@ -47,10 +52,10 @@ export default function LaporanScreen() {
 
   const filteredTrx = useMemo(() => {
     const q = search.toLowerCase();
-    return ALL_TRX.filter(
+    return allTrx.filter(
       (t) => t.id.toLowerCase().includes(q) || t.cashier.toLowerCase().includes(q),
     );
-  }, [search]);
+  }, [search, allTrx]);
 
   const pages = Math.max(1, Math.ceil(filteredTrx.length / PAGE_SIZE));
   const currentPage = Math.min(page, pages);

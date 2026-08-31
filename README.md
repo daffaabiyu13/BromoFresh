@@ -8,8 +8,8 @@ Repositori ini adalah hasil konversi mockup UI (Kasir, Dashboard, Laporan Penjua
 
 | Modul | Status | Layar |
 | --- | --- | --- |
-| **Kasir** | ✅ Fungsional | Grid produk per kategori, pencarian, keranjang (Zustand), metode bayar, struk, toast sukses |
-| **Dashboard** | ✅ Fungsional | KPI cards, grafik penjualan (stacked bar), donut kategori, produk terlaris, alert stok, transaksi terbaru |
+| **Kasir** | ✅ Fungsional | Grid produk per kategori, pencarian, keranjang (Zustand), metode bayar, struk, toast sukses. Transaksi tersimpan ke riwayat saat "Bayar Sekarang" |
+| **Dashboard** | ✅ Fungsional | KPI cards, grafik penjualan (stacked bar), donut kategori, produk terlaris, alert stok, transaksi terbaru (menampilkan transaksi kasir terbaru) |
 | **Laporan Penjualan** | ✅ Fungsional | Filter periode, KPI, tren penjualan, breakdown kategori, tabel transaksi + pencarian & paginasi |
 | **Auth** | ✅ Login (mode demo / Supabase) | Guard rute otomatis |
 | Stok, Laba Rugi, Audit, Karyawan, Pengaturan | ⏳ Roadmap | Tampil di sidebar sebagai "Segera" |
@@ -47,7 +47,7 @@ BromoFresh/
 │   ├── constants/theme.ts      # Design tokens (dari mockup)
 │   ├── data/                   # Seed & mock data (produk, dashboard, laporan)
 │   ├── lib/supabase.ts         # Client Supabase
-│   ├── store/                  # Zustand stores (cart, auth)
+│   ├── store/                  # Zustand stores (cart, auth, transaksi)
 │   ├── types/index.ts          # Tipe domain
 │   └── utils/format.ts         # Format Rupiah, tanggal, no. struk
 ├── supabase/schema.sql         # Skema database + RLS
