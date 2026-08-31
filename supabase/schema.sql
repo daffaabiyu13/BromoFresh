@@ -204,3 +204,40 @@ create policy stock_read on stock_entries for select
 drop policy if exists stock_write on stock_entries;
 create policy stock_write on stock_entries for insert
   with check (auth_role() in ('owner', 'manajer'));
+
+-- ============================================================================
+-- AUTO-PROFILE
+-- Setiap user baru di auth.users otomatis mendapat baris `profiles`. Role & nama
+-- diambil dari user_metadata bila ada (role wajib salah satu nilai enum), jika
+-- tidak default 'kasir' dan nama dari bagian depan email.
+-- ============================================================================
+create or replace function handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, name, role, avatar)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    coalesce(
+      case
+        when new.raw_user_meta_data->>'role' in ('owner', 'manajer', 'kasir', 'karyawan')
+          then (new.raw_user_meta_data->>'role')::user_role
+        else null
+      end,
+      'kasir'
+    ),
+    coalesce(new.raw_user_meta_data->>'avatar', '👤')
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
