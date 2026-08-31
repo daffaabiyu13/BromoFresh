@@ -6,7 +6,7 @@ import { criticalCount } from '@/data/mockStock';
 interface NavItem {
   label: string;
   icon: string;
-  href?: '/dashboard' | '/kasir' | '/laporan' | '/stok' | '/labarugi' | '/audit' | '/karyawan';
+  href?: '/dashboard' | '/kasir' | '/laporan' | '/stok' | '/labarugi' | '/audit' | '/karyawan' | '/pengaturan';
   alert?: number;
   group: 'Menu' | 'Manajemen';
 }
@@ -23,7 +23,7 @@ const NAV: NavItem[] = [
   { label: 'Laba Rugi', icon: '💵', href: '/labarugi', group: 'Menu' },
   { label: 'Audit', icon: '📄', href: '/audit', group: 'Menu' },
   { label: 'Karyawan', icon: '👥', href: '/karyawan', group: 'Manajemen' },
-  { label: 'Pengaturan', icon: '⚙️', group: 'Manajemen' },
+  { label: 'Pengaturan', icon: '⚙️', href: '/pengaturan', group: 'Manajemen' },
 ];
 
 export function Sidebar() {
