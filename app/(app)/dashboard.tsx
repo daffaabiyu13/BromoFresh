@@ -15,6 +15,8 @@ import {
   type Kpi,
 } from '@/data/mockDashboard';
 import { formatRupiah } from '@/utils/format';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { useTransactions } from '@/lib/queries';
 import { useTransactionStore } from '@/store/useTransactionStore';
 import type { Transaction } from '@/types';
 
@@ -23,8 +25,11 @@ const PERIODS = ['Hari', 'Minggu', 'Bulan', 'Tahun'] as const;
 export default function DashboardScreen() {
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>('Minggu');
   const recorded = useTransactionStore((s) => s.transactions);
-  // Transaksi hasil kasir tampil paling atas, dilengkapi data contoh hingga 5 baris.
-  const latestTransactions = [...recorded, ...recentTransactions].slice(0, 5);
+  const { data: dbTransactions = [] } = useTransactions();
+  // Sumber transaksi: Supabase bila terhubung, jika tidak riwayat lokal.
+  // Dilengkapi data contoh hingga 5 baris.
+  const source = isSupabaseConfigured ? dbTransactions : recorded;
+  const latestTransactions = [...source, ...recentTransactions].slice(0, 5);
 
   return (
     <AppShell

@@ -103,14 +103,16 @@ aplikasi tetap jalan tanpa backend, tanpa mengubah kode layar.
 | --- | --- | --- |
 | `useProducts()` | `SELECT` dari `products` | `src/data/products.ts` |
 | `useStockProducts()` | `SELECT` dari `products` (+ HPP, stok) | `src/data/mockStock.ts` |
+| `useTransactions()` | `SELECT` `transactions` (+ nama kasir & jumlah item) | array kosong (pakai riwayat lokal) |
 | `useRecordTransaction()` | `INSERT` ke `transactions` + `transaction_items` | no-op (riwayat lokal Zustand) |
 | `useRestock()` | `INSERT` `stock_entries` + `UPDATE products.stock` | update cache optimistik saja |
 
 Layar yang sudah memakai lapisan ini: **Kasir** (produk + simpan transaksi +
-jumlah produk per kategori dinamis) dan **Stok** (daftar stok + restock).
+jumlah produk per kategori dinamis), **Stok** (daftar stok + restock), serta
+**Dashboard** & **Laporan** (riwayat transaksi).
 
-> Layar Dashboard, Laporan, Laba Rugi, dan Audit masih memakai data contoh dan
-> akan dimigrasikan pada PR berikutnya.
+> Layar Laba Rugi dan Audit masih memakai data contoh dan akan dimigrasikan
+> pada PR berikutnya.
 
 ## 🎨 Desain
 
