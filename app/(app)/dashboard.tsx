@@ -15,12 +15,16 @@ import {
   type Kpi,
 } from '@/data/mockDashboard';
 import { formatRupiah } from '@/utils/format';
+import { useTransactionStore } from '@/store/useTransactionStore';
 import type { Transaction } from '@/types';
 
 const PERIODS = ['Hari', 'Minggu', 'Bulan', 'Tahun'] as const;
 
 export default function DashboardScreen() {
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>('Minggu');
+  const recorded = useTransactionStore((s) => s.transactions);
+  // Transaksi hasil kasir tampil paling atas, dilengkapi data contoh hingga 5 baris.
+  const latestTransactions = [...recorded, ...recentTransactions].slice(0, 5);
 
   return (
     <AppShell
@@ -154,7 +158,7 @@ export default function DashboardScreen() {
               <Text style={[styles.th, styles.cTotal]}>Total</Text>
               <Text style={[styles.th, styles.cMethod]}>Metode</Text>
             </View>
-            {recentTransactions.map((t) => (
+            {latestTransactions.map((t) => (
               <TxRow key={t.id} tx={t} />
             ))}
           </View>
