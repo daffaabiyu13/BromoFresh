@@ -55,3 +55,13 @@ export interface AuthUser {
   role: UserRole;
   avatar: string;
 }
+
+export interface Employee {
+  id: string;
+  name: string;
+  role: UserRole;
+  avatar: string;
+  phone: string;
+  joinedAt: string;
+  active: boolean;
+}

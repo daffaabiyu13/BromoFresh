@@ -16,8 +16,9 @@ Repositori ini adalah hasil konversi mockup UI (Kasir, Dashboard, Laporan Penjua
 | **Manajemen Stok** | ✅ Fungsional | Ringkasan stok, filter kategori & stok kritis, pencarian, tabel produk + status stok, tombol restock (Supabase / mock) |
 | **Laba Rugi** | ✅ Fungsional | Filter periode, KPI, laporan L/R (pendapatan → HPP → laba kotor → biaya operasional → laba bersih), tren laba, margin per kategori, input biaya operasional (Zustand). Khusus Owner |
 | **Audit** | ✅ Fungsional | Tab Log Aktivitas, Opname Stok (selisih & nilai kerugian), Rekonsiliasi Kas. Khusus Owner & Manajer |
+| **Karyawan** | ✅ Fungsional | Daftar karyawan (role, kontak, status) dari tabel `profiles`, tab performa kasir. Khusus Owner & Manajer |
 | **Auth** | ✅ Login (mode demo / Supabase) | Guard rute otomatis |
-| Karyawan, Pengaturan | ⏳ Roadmap | Tampil di sidebar sebagai "Segera" |
+| Pengaturan | ⏳ Roadmap | Tampil di sidebar sebagai "Segera" |
 
 > Selama kredensial Supabase belum diisi, aplikasi berjalan memakai **data contoh (mock)** sehingga bisa langsung didemokan tanpa backend.
 
@@ -46,7 +47,8 @@ BromoFresh/
 │       ├── laporan.tsx         # Modul Laporan Penjualan
 │       ├── stok.tsx            # Modul Manajemen Stok
 │       ├── labarugi.tsx        # Modul Laba Rugi
-│       └── audit.tsx           # Modul Audit
+│       ├── audit.tsx           # Modul Audit
+│       └── karyawan.tsx        # Modul Karyawan
 ├── src/
 │   ├── components/             # Komponen UI bersama
 │   │   ├── charts/             # StackedBarChart, DonutChart
@@ -106,6 +108,7 @@ aplikasi tetap jalan tanpa backend, tanpa mengubah kode layar.
 | `useProducts()` | `SELECT` dari `products` | `src/data/products.ts` |
 | `useStockProducts()` | `SELECT` dari `products` (+ HPP, stok) | `src/data/mockStock.ts` |
 | `useTransactions()` | `SELECT` `transactions` (+ nama kasir & jumlah item) | array kosong (pakai riwayat lokal) |
+| `useEmployees()` | `SELECT` dari `profiles` | `src/data/mockEmployees.ts` |
 | `useRecordTransaction()` | `INSERT` ke `transactions` + `transaction_items` | no-op (riwayat lokal Zustand) |
 | `useRestock()` | `INSERT` `stock_entries` + `UPDATE products.stock` | update cache optimistik saja |
 
