@@ -1,5 +1,7 @@
 # 🥬 Sayuran POS
 
+[![CI](https://github.com/daffaabiyu13/BromoFresh/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/daffaabiyu13/BromoFresh/actions/workflows/ci.yml)
+
 Aplikasi **Point of Sale** untuk toko sayuran, dibangun dengan **React Native (Expo)** — berjalan di Android, iOS, dan Web dari satu codebase.
 
 Repositori ini adalah hasil konversi mockup UI (Kasir, Dashboard, Laporan Penjualan) menjadi komponen React Native, dengan struktur project yang mengikuti [PRD Sayuran POS](#) dan tech stack yang direkomendasikan.
