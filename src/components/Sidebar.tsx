@@ -1,11 +1,12 @@
 import { Link, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { palette, radius } from '@/constants/theme';
+import { criticalCount } from '@/data/mockStock';
 
 interface NavItem {
   label: string;
   icon: string;
-  href?: '/dashboard' | '/kasir' | '/laporan';
+  href?: '/dashboard' | '/kasir' | '/laporan' | '/stok';
   alert?: number;
   group: 'Menu' | 'Manajemen';
 }
@@ -18,7 +19,7 @@ const NAV: NavItem[] = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard', group: 'Menu' },
   { label: 'Kasir', icon: '🛒', href: '/kasir', group: 'Menu' },
   { label: 'Laporan', icon: '📊', href: '/laporan', group: 'Menu' },
-  { label: 'Stok', icon: '📦', alert: 4, group: 'Menu' },
+  { label: 'Stok', icon: '📦', href: '/stok', alert: criticalCount(), group: 'Menu' },
   { label: 'Laba Rugi', icon: '💵', group: 'Menu' },
   { label: 'Audit', icon: '📄', group: 'Menu' },
   { label: 'Karyawan', icon: '👥', group: 'Manajemen' },
