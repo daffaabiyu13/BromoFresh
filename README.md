@@ -53,6 +53,7 @@ BromoFresh/
 │   ├── constants/theme.ts      # Design tokens (dari mockup)
 │   ├── data/                   # Seed & mock data (produk, dashboard, laporan)
 │   ├── lib/supabase.ts         # Client Supabase
+│   ├── lib/queries.ts          # React Query hooks (Supabase ↔ mock fallback)
 │   ├── store/                  # Zustand stores (cart, auth, transaksi)
 │   ├── types/index.ts          # Tipe domain
 │   └── utils/format.ts         # Format Rupiah, tanggal, no. struk
@@ -86,9 +87,25 @@ npm run typecheck
 ## 🔌 Menghubungkan Supabase
 
 1. Buat project di [supabase.com](https://supabase.com).
-2. Jalankan isi `supabase/schema.sql` di **SQL Editor**.
-3. Salin **Project URL** dan **anon public key** dari Project Settings → API ke `.env`.
-4. Restart Expo. Login kini memakai Supabase Auth; layar dapat diarahkan untuk fetch data nyata (mengganti data mock di `src/data/`).
+2. Jalankan `supabase/schema.sql` di **SQL Editor** (tabel + RLS).
+3. Jalankan `supabase/seed.sql` untuk mengisi 34 produk contoh ke tabel `products`.
+4. Salin **Project URL** dan **anon public key** dari Project Settings → API ke `.env`.
+5. Restart Expo. Login kini memakai Supabase Auth, dan **Kasir membaca produk
+   dari database serta menyimpan transaksi** (`transactions` + `transaction_items`).
+
+### Lapisan data (`src/lib/queries.ts`)
+
+Data server diakses lewat React Query. Setiap hook otomatis memakai Supabase
+bila `.env` sudah diisi, dan **jatuh ke data contoh (mock)** bila belum — jadi
+aplikasi tetap jalan tanpa backend, tanpa mengubah kode layar.
+
+| Hook | Sumber saat terhubung | Fallback |
+| --- | --- | --- |
+| `useProducts()` | `SELECT` dari `products` | `src/data/products.ts` |
+| `useRecordTransaction()` | `INSERT` ke `transactions` + `transaction_items` | no-op (riwayat lokal Zustand) |
+
+> Layar lain (Dashboard, Laporan, Stok, Laba Rugi, Audit) masih memakai data
+> contoh dan akan dimigrasikan ke lapisan ini pada PR berikutnya.
 
 ## 🎨 Desain
 

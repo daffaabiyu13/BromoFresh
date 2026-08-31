@@ -8,6 +8,8 @@ export type UserRole = 'owner' | 'manajer' | 'kasir' | 'karyawan';
 
 export interface Product {
   id: number;
+  /** Primary key (uuid) dari Supabase; tidak ada pada data contoh (mock). */
+  uuid?: string;
   name: string;
   price: number;
   /** Satuan jual, mis. "ikat", "kg", "pcs". */
