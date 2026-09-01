@@ -155,9 +155,16 @@ alter table stock_entries     enable row level security;
 alter table expenses          enable row level security;
 alter table audit_logs        enable row level security;
 
--- Helper: role pengguna yang sedang login
+-- Helper: role pengguna yang sedang login.
+-- WAJIB `security definer` agar fungsi ini membaca `profiles` tanpa memicu
+-- kembali kebijakan RLS `profiles` (yang juga memanggil fungsi ini) —
+-- tanpa ini terjadi rekursi tak terhingga dan query profiles gagal.
 create or replace function auth_role() returns user_role
-language sql stable as $$
+language sql
+stable
+security definer
+set search_path = public
+as $$
   select role from profiles where id = auth.uid();
 $$;
 
