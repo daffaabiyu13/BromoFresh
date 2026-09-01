@@ -135,6 +135,23 @@ jumlah produk per kategori dinamis), **Stok** (daftar stok + restock), serta
 > Layar Laba Rugi dan Audit masih memakai data contoh dan akan dimigrasikan
 > pada PR berikutnya.
 
+## ▲ Deploy ke Vercel (Web)
+
+Web build (`expo export --platform web` → `dist/`) di-host sebagai situs statis.
+File `vercel.json` sudah mengatur build command, output, dan rewrite SPA.
+
+1. [vercel.com](https://vercel.com) → **Add New… → Project** → pilih repo ini.
+2. Framework Preset **Other** (build & output diambil dari `vercel.json`).
+3. **Environment Variables** (Production & Preview) — wajib diisi sebelum deploy:
+   - `EXPO_PUBLIC_SUPABASE_URL`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+4. **Production Branch**: set ke `develop` (atau rilis dulu ke `main`).
+5. **Deploy**. Push berikutnya ke branch produksi auto-deploy.
+6. Setelah live: tambahkan domain Vercel ke Supabase → Authentication → **URL
+   Configuration** (Site URL / Redirect URLs) agar login web mulus.
+
+> Prefix `EXPO_PUBLIC_` di-*inline* saat build — ubah env var berarti perlu **Redeploy**.
+
 ## 🎨 Desain
 
 Semua warna, radius, dan tipografi diambil dari mockup dan disatukan di
