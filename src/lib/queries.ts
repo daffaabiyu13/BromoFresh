@@ -182,45 +182,51 @@ export function useStockProducts() {
   });
 }
 
-export interface RestockInput {
+export interface StockAdjustInput {
   id: number;
   uuid?: string;
-  qty: number;
+  /** Perubahan stok: positif = tambah, negatif = kurangi. */
+  delta: number;
   currentStock: number;
 }
 
 /**
- * Restock produk. Memperbarui cache secara optimistik (langsung terlihat di UI
- * di mode demo maupun terhubung), dan bila terhubung Supabase: mencatat
- * `stock_entries` + memperbarui `products.stock`.
+ * Sesuaikan stok produk sebanyak `delta` (boleh negatif). Stok tidak pernah
+ * turun di bawah 0. Cache diperbarui optimistik (langsung terlihat di mode demo
+ * maupun terhubung); bila terhubung Supabase juga mencatat `stock_entries`
+ * (masuk/keluar) + memperbarui `products.stock`.
  */
-export function useRestock() {
+export function useStockAdjust() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ uuid, qty, currentStock }: RestockInput) => {
+    mutationFn: async ({ uuid, delta, currentStock }: StockAdjustInput) => {
       if (!isSupabaseConfigured || !uuid) return;
-      const { error: entryError } = await supabase.from('stock_entries').insert({
-        product_id: uuid,
-        movement: 'masuk',
-        qty,
-        reason: 'Restock',
-      });
-      if (entryError) throw entryError;
+      const nextStock = Math.max(0, currentStock + delta);
+      const applied = nextStock - currentStock; // delta efektif setelah dibatasi ≥ 0
+      if (applied !== 0) {
+        const { error: entryError } = await supabase.from('stock_entries').insert({
+          product_id: uuid,
+          movement: applied > 0 ? 'masuk' : 'keluar',
+          qty: Math.abs(applied),
+          reason: 'Penyesuaian manual',
+        });
+        if (entryError) throw entryError;
+      }
       const { error: updateError } = await supabase
         .from('products')
-        .update({ stock: currentStock + qty })
+        .update({ stock: nextStock })
         .eq('id', uuid);
       if (updateError) throw updateError;
     },
-    onMutate: async ({ id, qty }: RestockInput) => {
+    onMutate: async ({ id, delta }: StockAdjustInput) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.stock });
       const previous = queryClient.getQueryData<StockRow[]>(queryKeys.stock);
       queryClient.setQueryData<StockRow[]>(queryKeys.stock, (old: StockRow[] | undefined) =>
-        (old ?? []).map((r: StockRow) =>
-          r.id === id
-            ? { ...r, stock: r.stock + qty, status: stockStatusOf(r.stock + qty, r.minStock) }
-            : r,
-        ),
+        (old ?? []).map((r: StockRow) => {
+          if (r.id !== id) return r;
+          const nextStock = Math.max(0, r.stock + delta);
+          return { ...r, stock: nextStock, status: stockStatusOf(nextStock, r.minStock) };
+        }),
       );
       return { previous };
     },
