@@ -9,7 +9,8 @@ import type { ReportPeriod } from '@/data/mockReports';
 import { netProfitTrend, profitLossData } from '@/data/mockProfitLoss';
 import { useExpenseStore } from '@/store/useExpenseStore';
 import { useAuthStore } from '@/store/useAuthStore';
-import { formatRupiah, formatShort } from '@/utils/format';
+import { formatRupiah, formatShort, formatTanggalId } from '@/utils/format';
+import { htmlTable, printDocument } from '@/utils/export';
 
 const PERIOD_TABS: { key: ReportPeriod; label: string }[] = [
   { key: 'harian', label: 'Harian' },
@@ -45,6 +46,39 @@ export default function LabaRugiScreen() {
     setNewAmount('');
   }
 
+  function handleExportPdf() {
+    const plHtml = htmlTable(
+      ['Komponen', 'Jumlah'],
+      [
+        ['Pendapatan', formatRupiah(pl.revenue)],
+        ['HPP (Harga Pokok Penjualan)', '-' + formatRupiah(pl.cogs)],
+        [`Laba Kotor (margin ${grossMargin.toFixed(1)}%)`, formatRupiah(grossProfit)],
+        ['Biaya Operasional', '-' + formatRupiah(opex)],
+        [`Laba Bersih (margin ${netMargin.toFixed(1)}%)`, formatRupiah(netProfit)],
+      ],
+    );
+    const marginHtml = htmlTable(
+      ['Kategori', 'Margin', 'Laba'],
+      pl.categoryMargin.map((c) => {
+        const profit = c.revenue - c.cogs;
+        const margin = c.revenue > 0 ? (profit / c.revenue) * 100 : 0;
+        return [c.label, `${margin.toFixed(0)}%`, formatShort(profit)];
+      }),
+    );
+    const opexHtml = htmlTable(
+      ['Biaya', 'Kategori', 'Jumlah'],
+      expenses.map((e) => [e.label, e.category, formatRupiah(e.amount)]),
+    );
+    printDocument(
+      `Laba Rugi — ${pl.range}`,
+      `<h1>Laporan Laba Rugi</h1><p class="range">${pl.range} · dicetak ${formatTanggalId(new Date(), true)}</p>` +
+        `<h2>Ringkasan Laba Rugi</h2>${plHtml}` +
+        `<h2>Margin per Kategori</h2>${marginHtml}` +
+        `<h2>Biaya Operasional (Total ${formatRupiah(opex)})</h2>${opexHtml}` +
+        `<p class="foot">Sayuran POS · Toko Sayuran</p>`,
+    );
+  }
+
   // Akses modul ini khusus Owner (PRD §03 matriks akses).
   if (role && role !== 'owner') {
     return (
@@ -68,7 +102,7 @@ export default function LabaRugiScreen() {
         </View>
       }
       headerRight={
-        <PressableScale style={styles.exportBtn}>
+        <PressableScale style={styles.exportBtn} onPress={handleExportPdf}>
           <Text style={styles.exportText}>🖨 Cetak PDF</Text>
         </PressableScale>
       }

@@ -12,9 +12,9 @@ Repositori ini adalah hasil konversi mockup UI (Kasir, Dashboard, Laporan Penjua
 | --- | --- | --- |
 | **Kasir** | ✅ Fungsional | Grid produk per kategori, pencarian, keranjang (Zustand), metode bayar, struk, toast sukses. Transaksi tersimpan ke riwayat saat "Bayar Sekarang" |
 | **Dashboard** | ✅ Fungsional | KPI cards, grafik penjualan (stacked bar), donut kategori, produk terlaris, alert stok, transaksi terbaru (menampilkan transaksi kasir terbaru) |
-| **Laporan Penjualan** | ✅ Fungsional | Filter periode, KPI, tren penjualan, breakdown kategori, tabel transaksi + pencarian & paginasi |
+| **Laporan Penjualan** | ✅ Fungsional | Filter periode, KPI, tren penjualan, breakdown kategori, tabel transaksi + pencarian & paginasi, **Export CSV & Cetak PDF** (Web) |
 | **Manajemen Stok** | ✅ Fungsional | Ringkasan stok, filter kategori & stok kritis, pencarian, tabel produk + status stok, tombol − / + tambah/kurang stok, serta tambah, edit, dan hapus produk custom (satuan & HPP) — Supabase / mock |
-| **Laba Rugi** | ✅ Fungsional | Filter periode, KPI, laporan L/R (pendapatan → HPP → laba kotor → biaya operasional → laba bersih), tren laba, margin per kategori, input biaya operasional (Zustand). Khusus Owner |
+| **Laba Rugi** | ✅ Fungsional | Filter periode, KPI, laporan L/R (pendapatan → HPP → laba kotor → biaya operasional → laba bersih), tren laba, margin per kategori, input biaya operasional (Zustand), **Cetak PDF** (Web). Khusus Owner |
 | **Audit** | ✅ Fungsional | Tab Log Aktivitas, Opname Stok (selisih & nilai kerugian), Rekonsiliasi Kas. Khusus Owner & Manajer |
 | **Karyawan** | ✅ Fungsional | Daftar karyawan (role, kontak, status) dari tabel `profiles`, tab performa kasir. Khusus Owner & Manajer |
 | **Pengaturan** | ✅ Fungsional | Info toko, pajak (PPN), metode pembayaran, printer struk, notifikasi, tema (Zustand). Khusus Owner |

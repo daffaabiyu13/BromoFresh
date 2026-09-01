@@ -6,7 +6,15 @@ import { PressableScale } from '@/components/anim/PressableScale';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import { generateTransactions, periodData, type ReportPeriod } from '@/data/mockReports';
-import { formatRupiah, formatShort } from '@/utils/format';
+import { formatRupiah, formatShort, formatTanggalId } from '@/utils/format';
+import {
+  buildCsv,
+  downloadCsv,
+  fileStamp,
+  htmlTable,
+  METHOD_LABEL,
+  printDocument,
+} from '@/utils/export';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useTransactions } from '@/lib/queries';
 import { useTransactionStore } from '@/store/useTransactionStore';
@@ -74,6 +82,46 @@ export default function LaporanScreen() {
     { label: 'Item Terjual', value: String(data.kpiItems), badge: data.badgeItems, up: true },
   ];
 
+  const CSV_HEADERS = [
+    'ID Transaksi', 'Waktu', 'Kasir', 'Item', 'Kategori',
+    'Subtotal', 'Diskon', 'Total', 'Bayar', 'Status',
+  ];
+
+  function handleExportCsv() {
+    const rows = filteredTrx.map((t) => [
+      t.id, t.time, t.cashier, t.items, t.category,
+      t.subtotal, t.discount, t.total, METHOD_LABEL[t.method] ?? t.method, t.status,
+    ]);
+    downloadCsv(`laporan-penjualan-${period}-${fileStamp()}.csv`, buildCsv(CSV_HEADERS, rows));
+  }
+
+  function handleExportPdf() {
+    const kpiHtml =
+      `<div class="kpis">` +
+      kpis.map((k) => `<div class="kpi"><div class="lbl">${k.label}</div><div class="val">${k.value}</div></div>`).join('') +
+      `</div>`;
+    const catHtml = htmlTable(
+      ['Kategori', 'Kontribusi', 'Omset'],
+      catBreakdown.map((c) => [c.label, `${c.pct}%`, formatShort(c.value * 1000)]),
+    );
+    const trxHtml = htmlTable(
+      CSV_HEADERS,
+      filteredTrx.map((t) => [
+        t.id, t.time, t.cashier, String(t.items), t.category,
+        formatRupiah(t.subtotal), t.discount > 0 ? '-' + formatRupiah(t.discount) : '—',
+        formatRupiah(t.total), METHOD_LABEL[t.method] ?? t.method, t.status,
+      ]),
+    );
+    printDocument(
+      `Laporan Penjualan — ${data.range}`,
+      `<h1>Laporan Penjualan</h1><p class="range">${data.range} · dicetak ${formatTanggalId(new Date(), true)}</p>` +
+        `<h2>Ringkasan</h2>${kpiHtml}` +
+        `<h2>Per Kategori</h2>${catHtml}` +
+        `<h2>Riwayat Transaksi (${filteredTrx.length})</h2>${trxHtml}` +
+        `<p class="foot">Sayuran POS · Toko Sayuran</p>`,
+    );
+  }
+
   return (
     <AppShell
       headerCenter={
@@ -84,10 +132,10 @@ export default function LaporanScreen() {
       }
       headerRight={
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <PressableScale style={styles.exportBtn}>
+          <PressableScale style={styles.exportBtn} onPress={handleExportCsv}>
             <Text style={styles.exportText}>⬇ Export CSV</Text>
           </PressableScale>
-          <PressableScale style={[styles.exportBtn, styles.exportPrimary]}>
+          <PressableScale style={[styles.exportBtn, styles.exportPrimary]} onPress={handleExportPdf}>
             <Text style={[styles.exportText, { color: palette.white }]}>🖨 Cetak PDF</Text>
           </PressableScale>
         </View>

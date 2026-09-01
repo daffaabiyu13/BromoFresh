@@ -17,6 +17,7 @@ import {
   type Kpi,
 } from '@/data/mockDashboard';
 import { formatRupiah } from '@/utils/format';
+import { buildCsv, downloadCsv, fileStamp, METHOD_LABEL } from '@/utils/export';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useTransactions } from '@/lib/queries';
 import { useTransactionStore } from '@/store/useTransactionStore';
@@ -32,6 +33,16 @@ export default function DashboardScreen() {
   // Dilengkapi data contoh hingga 5 baris.
   const source = isSupabaseConfigured ? dbTransactions : recorded;
   const latestTransactions = [...source, ...recentTransactions].slice(0, 5);
+
+  function handleExport() {
+    const rows = latestTransactions.map((t) => [
+      t.id, t.time, t.cashier, t.items, t.category, t.total, METHOD_LABEL[t.method] ?? t.method,
+    ]);
+    downloadCsv(
+      `dashboard-transaksi-${fileStamp()}.csv`,
+      buildCsv(['No. Struk', 'Waktu', 'Kasir', 'Item', 'Kategori', 'Total', 'Metode'], rows),
+    );
+  }
 
   return (
     <AppShell
@@ -49,7 +60,7 @@ export default function DashboardScreen() {
         </View>
       }
       headerRight={
-        <PressableScale style={styles.exportBtn}>
+        <PressableScale style={styles.exportBtn} onPress={handleExport}>
           <Text style={styles.exportText}>⬇ Export</Text>
         </PressableScale>
       }
