@@ -457,3 +457,84 @@ export function useDeleteProduct() {
     },
   });
 }
+
+export interface UpdateProductInput {
+  id: number;
+  uuid?: string;
+  name: string;
+  category: CategoryKey;
+  unit: string;
+  sellPrice: number;
+  costPrice: number;
+  stock: number;
+  minStock: number;
+  emoji?: string;
+}
+
+/**
+ * Ubah detail produk. Bila terhubung Supabase: `UPDATE products`. Di mode demo:
+ * perbarui cache produk & stok (status stok dihitung ulang).
+ */
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ uuid, ...i }: UpdateProductInput) => {
+      if (!isSupabaseConfigured || !uuid) return;
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: i.name,
+          category_id: i.category,
+          unit: i.unit,
+          sell_price: i.sellPrice,
+          cost_price: i.costPrice,
+          stock: i.stock,
+          min_stock: i.minStock,
+          emoji: i.emoji ?? '📦',
+        })
+        .eq('id', uuid);
+      if (error) throw error;
+    },
+    onSuccess: (_data, input) => {
+      if (isSupabaseConfigured) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.products });
+        queryClient.invalidateQueries({ queryKey: queryKeys.stock });
+        return;
+      }
+      queryClient.setQueryData<Product[]>(queryKeys.products, (old: Product[] | undefined) =>
+        (old ?? []).map((p: Product) =>
+          p.id === input.id
+            ? {
+                ...p,
+                name: input.name,
+                price: input.sellPrice,
+                unit: input.unit,
+                category: input.category,
+                emoji: input.emoji ?? p.emoji,
+                stock: input.stock,
+                minStock: input.minStock,
+              }
+            : p,
+        ),
+      );
+      queryClient.setQueryData<StockRow[]>(queryKeys.stock, (old: StockRow[] | undefined) =>
+        (old ?? []).map((r: StockRow) =>
+          r.id === input.id
+            ? {
+                ...r,
+                name: input.name,
+                price: input.sellPrice,
+                unit: input.unit,
+                category: input.category,
+                emoji: input.emoji ?? r.emoji,
+                costPrice: input.costPrice,
+                stock: input.stock,
+                minStock: input.minStock,
+                status: stockStatusOf(input.stock, input.minStock),
+              }
+            : r,
+        ),
+      );
+    },
+  });
+}
