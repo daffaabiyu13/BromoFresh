@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card } from '@/components/Card';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import type { StockRow, StockStatus } from '@/data/mockStock';
-import { useStockAdjust, useStockProducts } from '@/lib/queries';
+import { useAddProduct, useDeleteProduct, useStockAdjust, useStockProducts } from '@/lib/queries';
 import { formatRupiah } from '@/utils/format';
 import type { CategoryKey } from '@/types';
 
@@ -19,6 +19,26 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'kritis', label: '⚠ Stok Kritis' },
 ];
 
+const CATEGORY_OPTIONS: { key: CategoryKey; label: string }[] = [
+  { key: 'sayur', label: '🥬 Sayur' },
+  { key: 'buah', label: '🍊 Buah' },
+  { key: 'sembako', label: '🛒 Sembako' },
+  { key: 'frozen', label: '❄️ Frozen' },
+];
+
+const EMPTY_FORM = {
+  name: '',
+  category: 'sayur' as CategoryKey,
+  unit: '',
+  sellPrice: '',
+  costPrice: '',
+  stock: '',
+  minStock: '',
+  emoji: '',
+};
+
+const toInt = (v: string) => Number(v.replace(/[^0-9]/g, '')) || 0;
+
 const STATUS_STYLE: Record<StockStatus, { bg: string; fg: string; label: string }> = {
   kritis: { bg: palette.coralLight, fg: palette.coral, label: 'Kritis' },
   menipis: { bg: palette.amberLight, fg: palette.amber, label: 'Menipis' },
@@ -29,9 +49,37 @@ export default function StokScreen() {
   // Data stok dari Supabase (atau mock bila belum dikonfigurasi).
   const { data: rows = [] } = useStockProducts();
   const adjust = useStockAdjust();
+  const addProduct = useAddProduct();
+  const deleteProduct = useDeleteProduct();
 
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  const canSubmit = form.name.trim().length > 0 && toInt(form.sellPrice) > 0;
+
+  function submitProduct() {
+    if (!canSubmit || addProduct.isPending) return;
+    addProduct.mutate(
+      {
+        name: form.name.trim(),
+        category: form.category,
+        unit: form.unit.trim() || 'pcs',
+        sellPrice: toInt(form.sellPrice),
+        costPrice: toInt(form.costPrice),
+        stock: toInt(form.stock),
+        minStock: toInt(form.minStock),
+        emoji: form.emoji.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          setForm(EMPTY_FORM);
+          setShowForm(false);
+        },
+      },
+    );
+  }
 
   const summary = useMemo(() => {
     return {
@@ -58,6 +106,11 @@ export default function StokScreen() {
           <Text style={styles.headerTitle}>Manajemen Stok</Text>
           <Text style={styles.headerSub}>Inventory real-time per kategori</Text>
         </View>
+      }
+      headerRight={
+        <Pressable style={styles.addProductBtn} onPress={() => setShowForm((v) => !v)}>
+          <Text style={styles.addProductText}>{showForm ? '✕ Tutup' : '＋ Tambah Produk'}</Text>
+        </Pressable>
       }
     >
       {/* SUMMARY */}
@@ -96,6 +149,115 @@ export default function StokScreen() {
         </View>
       </Card>
 
+      {/* FORM TAMBAH PRODUK */}
+      {showForm ? (
+        <Card>
+          <Text style={styles.formTitle}>Tambah Produk Baru</Text>
+          <View style={styles.formGrid}>
+            <FormField label="Nama Produk" wide>
+              <TextInput
+                style={styles.input}
+                value={form.name}
+                onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
+                placeholder="mis. Cabai Merah"
+                placeholderTextColor={palette.muted}
+              />
+            </FormField>
+            <FormField label="Emoji">
+              <TextInput
+                style={styles.input}
+                value={form.emoji}
+                onChangeText={(v) => setForm((f) => ({ ...f, emoji: v }))}
+                placeholder="🌶️"
+                placeholderTextColor={palette.muted}
+              />
+            </FormField>
+            <FormField label="Satuan">
+              <TextInput
+                style={styles.input}
+                value={form.unit}
+                onChangeText={(v) => setForm((f) => ({ ...f, unit: v }))}
+                placeholder="kg / ikat / pcs"
+                placeholderTextColor={palette.muted}
+              />
+            </FormField>
+            <FormField label="Harga Jual (Rp)">
+              <TextInput
+                style={styles.input}
+                value={form.sellPrice}
+                onChangeText={(v) => setForm((f) => ({ ...f, sellPrice: v }))}
+                placeholder="0"
+                placeholderTextColor={palette.muted}
+                keyboardType="numeric"
+                inputMode="numeric"
+              />
+            </FormField>
+            <FormField label="HPP / Harga Beli (Rp)">
+              <TextInput
+                style={styles.input}
+                value={form.costPrice}
+                onChangeText={(v) => setForm((f) => ({ ...f, costPrice: v }))}
+                placeholder="0"
+                placeholderTextColor={palette.muted}
+                keyboardType="numeric"
+                inputMode="numeric"
+              />
+            </FormField>
+            <FormField label="Stok Awal">
+              <TextInput
+                style={styles.input}
+                value={form.stock}
+                onChangeText={(v) => setForm((f) => ({ ...f, stock: v }))}
+                placeholder="0"
+                placeholderTextColor={palette.muted}
+                keyboardType="numeric"
+                inputMode="numeric"
+              />
+            </FormField>
+            <FormField label="Stok Minimum">
+              <TextInput
+                style={styles.input}
+                value={form.minStock}
+                onChangeText={(v) => setForm((f) => ({ ...f, minStock: v }))}
+                placeholder="0"
+                placeholderTextColor={palette.muted}
+                keyboardType="numeric"
+                inputMode="numeric"
+              />
+            </FormField>
+          </View>
+
+          <Text style={styles.formFieldLabel}>Kategori</Text>
+          <View style={styles.catPickRow}>
+            {CATEGORY_OPTIONS.map((c) => {
+              const active = form.category === c.key;
+              return (
+                <Pressable
+                  key={c.key}
+                  onPress={() => setForm((f) => ({ ...f, category: c.key }))}
+                  style={[styles.catPick, active && styles.catPickActive]}
+                >
+                  <Text style={[styles.catPickText, active && { color: palette.g700 }]}>{c.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.formActions}>
+            <Pressable
+              style={[styles.saveBtn, !canSubmit && styles.saveBtnDisabled]}
+              onPress={submitProduct}
+              disabled={!canSubmit || addProduct.isPending}
+            >
+              <Text style={styles.saveText}>{addProduct.isPending ? 'Menyimpan…' : 'Simpan Produk'}</Text>
+            </Pressable>
+            <Pressable style={styles.cancelBtn} onPress={() => { setForm(EMPTY_FORM); setShowForm(false); }}>
+              <Text style={styles.cancelText}>Batal</Text>
+            </Pressable>
+          </View>
+        </Card>
+      ) : null}
+
       {/* TABLE */}
       <Card style={{ padding: 0 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -116,6 +278,7 @@ export default function StokScreen() {
                 onAdjust={(delta) =>
                   adjust.mutate({ id: row.id, uuid: row.uuid, delta, currentStock: row.stock })
                 }
+                onDelete={() => deleteProduct.mutate({ id: row.id, uuid: row.uuid })}
               />
             ))}
             {filtered.length === 0 ? (
@@ -158,7 +321,24 @@ function SummaryCard({
   );
 }
 
-function StockTableRow({ row, onAdjust }: { row: StockRow; onAdjust: (delta: number) => void }) {
+function FormField({ label, wide, children }: { label: string; wide?: boolean; children: ReactNode }) {
+  return (
+    <View style={[styles.formField, wide && styles.formFieldWide]}>
+      <Text style={styles.formFieldLabel}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
+function StockTableRow({
+  row,
+  onAdjust,
+  onDelete,
+}: {
+  row: StockRow;
+  onAdjust: (delta: number) => void;
+  onDelete: () => void;
+}) {
   const s = STATUS_STYLE[row.status];
   const catColor = categoryColors[row.category];
   return (
@@ -197,6 +377,9 @@ function StockTableRow({ row, onAdjust }: { row: StockRow; onAdjust: (delta: num
         <Pressable style={styles.stepBtn} onPress={() => onAdjust(1)}>
           <Text style={styles.stepText}>+</Text>
         </Pressable>
+        <Pressable style={styles.deleteBtn} onPress={onDelete}>
+          <Text style={styles.deleteText}>🗑</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -209,7 +392,7 @@ const C = {
   min: { width: 60 },
   hpp: { width: 110 },
   status: { width: 90 },
-  aksi: { width: 110 },
+  aksi: { width: 150 },
 } as const;
 
 const styles = StyleSheet.create({
@@ -293,6 +476,64 @@ const styles = StyleSheet.create({
   },
   stepBtnDisabled: { backgroundColor: '#B0C4BA' },
   stepText: { color: palette.white, fontSize: 18, fontWeight: '700', lineHeight: 20 },
+  deleteBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: palette.coralLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 2,
+  },
+  deleteText: { fontSize: 14 },
+
+  // add-product button & form
+  addProductBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.sm + 1,
+    backgroundColor: palette.g900,
+  },
+  addProductText: { color: palette.white, fontSize: 13, fontWeight: '700' },
+  formTitle: { fontSize: 14, fontWeight: '700', color: palette.text, marginBottom: 12 },
+  formGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  formField: { flexGrow: 1, flexBasis: 150, minWidth: 140 },
+  formFieldWide: { flexBasis: 260, minWidth: 220 },
+  formFieldLabel: { fontSize: 11, color: palette.muted, fontWeight: '600', marginBottom: 4, marginTop: 10 },
+  input: {
+    borderWidth: 1.5,
+    borderColor: palette.border,
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: palette.text,
+    backgroundColor: palette.cream,
+  },
+  catPickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  catPick: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: palette.border,
+    backgroundColor: palette.white,
+  },
+  catPickActive: { borderColor: palette.g700, backgroundColor: palette.g50 },
+  catPickText: { fontSize: 12, fontWeight: '600', color: palette.muted },
+  formActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  saveBtn: { backgroundColor: palette.g900, paddingHorizontal: 18, paddingVertical: 10, borderRadius: radius.md },
+  saveBtnDisabled: { backgroundColor: '#B0C4BA' },
+  saveText: { color: palette.white, fontSize: 13, fontWeight: '700' },
+  cancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: palette.border,
+    backgroundColor: palette.white,
+  },
+  cancelText: { color: palette.text, fontSize: 13, fontWeight: '600' },
   empty: { padding: 24, alignItems: 'center' },
   footer: { paddingHorizontal: 16, paddingVertical: 11, borderTopWidth: 1, borderTopColor: palette.border },
   footerText: { fontSize: 11, color: palette.muted },

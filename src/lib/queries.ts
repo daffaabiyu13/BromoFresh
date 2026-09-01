@@ -331,3 +331,129 @@ export function useEmployees() {
     initialData: isSupabaseConfigured ? undefined : mockEmployees,
   });
 }
+
+// ── CRUD PRODUK (Master Produk, PRD §08) ────────────────────────────────────
+
+export interface AddProductInput {
+  name: string;
+  category: CategoryKey;
+  unit: string;
+  sellPrice: number;
+  costPrice: number;
+  stock: number;
+  minStock: number;
+  emoji?: string;
+}
+
+const DEFAULT_PRODUCT_BG = '#EBF6F0';
+
+/**
+ * Tambah produk baru. Bila terhubung Supabase: INSERT ke `products` lalu
+ * segarkan daftar. Di mode demo: sisipkan ke cache React Query (produk & stok)
+ * sehingga langsung tampil tanpa backend.
+ */
+export function useAddProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: AddProductInput): Promise<{ id: number; uuid?: string }> => {
+      const surrogateId = Date.now();
+      if (!isSupabaseConfigured) return { id: surrogateId };
+      const { data, error } = await supabase
+        .from('products')
+        .insert({
+          name: input.name,
+          category_id: input.category,
+          unit: input.unit,
+          sell_price: input.sellPrice,
+          cost_price: input.costPrice,
+          stock: input.stock,
+          min_stock: input.minStock,
+          emoji: input.emoji ?? '📦',
+          bg: DEFAULT_PRODUCT_BG,
+          active: true,
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      return { id: surrogateId, uuid: (data as { id: string }).id };
+    },
+    onSuccess: ({ id, uuid }, input) => {
+      if (isSupabaseConfigured) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.products });
+        queryClient.invalidateQueries({ queryKey: queryKeys.stock });
+        return;
+      }
+      // Mode demo: sisipkan ke kedua cache secara langsung.
+      const product: Product = {
+        id,
+        uuid,
+        name: input.name,
+        price: input.sellPrice,
+        unit: input.unit,
+        category: input.category,
+        emoji: input.emoji ?? '📦',
+        bg: DEFAULT_PRODUCT_BG,
+        stock: input.stock,
+        minStock: input.minStock,
+      };
+      const stockRow: StockRow = {
+        ...product,
+        stock: input.stock,
+        minStock: input.minStock,
+        costPrice: input.costPrice,
+        status: stockStatusOf(input.stock, input.minStock),
+      };
+      queryClient.setQueryData<Product[]>(queryKeys.products, (old: Product[] | undefined) => [
+        ...(old ?? []),
+        product,
+      ]);
+      queryClient.setQueryData<StockRow[]>(queryKeys.stock, (old: StockRow[] | undefined) => [
+        ...(old ?? []),
+        stockRow,
+      ]);
+    },
+  });
+}
+
+export interface DeleteProductInput {
+  id: number;
+  uuid?: string;
+}
+
+/**
+ * Hapus produk. Untuk menjaga riwayat transaksi (PRD §08), produk yang
+ * terhubung Supabase di-arsipkan (`active=false`), bukan dihapus permanen —
+ * efeknya hilang dari daftar & kasir. Di mode demo: dihapus dari cache.
+ */
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ uuid }: DeleteProductInput) => {
+      if (!isSupabaseConfigured || !uuid) return;
+      const { error } = await supabase.from('products').update({ active: false }).eq('id', uuid);
+      if (error) throw error;
+    },
+    onMutate: async ({ id }: DeleteProductInput) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.stock });
+      const prevStock = queryClient.getQueryData<StockRow[]>(queryKeys.stock);
+      const prevProducts = queryClient.getQueryData<Product[]>(queryKeys.products);
+      queryClient.setQueryData<StockRow[]>(queryKeys.stock, (old: StockRow[] | undefined) =>
+        (old ?? []).filter((r: StockRow) => r.id !== id),
+      );
+      queryClient.setQueryData<Product[]>(queryKeys.products, (old: Product[] | undefined) =>
+        (old ?? []).filter((p: Product) => p.id !== id),
+      );
+      return { prevStock, prevProducts };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prevStock) queryClient.setQueryData(queryKeys.stock, context.prevStock);
+      if (context?.prevProducts) queryClient.setQueryData(queryKeys.products, context.prevProducts);
+    },
+    onSettled: () => {
+      if (isSupabaseConfigured) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.products });
+        queryClient.invalidateQueries({ queryKey: queryKeys.stock });
+      }
+    },
+  });
+}
