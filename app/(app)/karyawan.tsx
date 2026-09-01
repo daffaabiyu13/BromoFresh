@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card, CardHeader } from '@/components/Card';
+import { PressableScale } from '@/components/anim/PressableScale';
 import { palette, radius } from '@/constants/theme';
 import { cashierPerformance, roleLabel } from '@/data/mockEmployees';
 import { useEmployees } from '@/lib/queries';
@@ -62,11 +63,11 @@ export default function KaryawanScreen() {
       {/* TABS */}
       <View style={styles.tabs}>
         {(['daftar', 'performa'] as const).map((t) => (
-          <Pressable key={t} onPress={() => setTab(t)} style={[styles.tab, tab === t && styles.tabActive]}>
+          <PressableScale key={t} onPress={() => setTab(t)} style={[styles.tab, tab === t && styles.tabActive]}>
             <Text style={[styles.tabText, tab === t && { color: palette.white }]}>
               {t === 'daftar' ? 'Daftar Karyawan' : 'Performa Penjualan'}
             </Text>
-          </Pressable>
+          </PressableScale>
         ))}
       </View>
 

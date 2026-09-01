@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card, CardHeader } from '@/components/Card';
+import { PressableScale } from '@/components/anim/PressableScale';
 import { palette, radius } from '@/constants/theme';
 import {
   ACTION_META,
@@ -52,13 +53,13 @@ export default function AuditScreen() {
         {TABS.map((t) => {
           const active = tab === t.key;
           return (
-            <Pressable
+            <PressableScale
               key={t.key}
               onPress={() => setTab(t.key)}
               style={[styles.tab, active && styles.tabActive]}
             >
               <Text style={[styles.tabText, active && { color: palette.white }]}>{t.label}</Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>

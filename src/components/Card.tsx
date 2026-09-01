@@ -1,15 +1,19 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Animated, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { palette, radius, spacing } from '@/constants/theme';
+import { useReveal } from '@/components/anim/useReveal';
 
 interface CardProps {
   children: ReactNode;
-  style?: ViewStyle | ViewStyle[];
+  style?: StyleProp<ViewStyle>;
+  /** Jeda animasi masuk (ms) — beri nilai berbeda antar-kartu untuk efek berurutan. */
+  delay?: number;
 }
 
 /** Kartu putih berbingkai — wadah dasar untuk konten di Dashboard & Laporan. */
-export function Card({ children, style }: CardProps) {
-  return <View style={[styles.card, style]}>{children}</View>;
+export function Card({ children, style, delay }: CardProps) {
+  const anim = useReveal({ delay });
+  return <Animated.View style={[styles.card, style, anim]}>{children}</Animated.View>;
 }
 
 interface CardHeaderProps {

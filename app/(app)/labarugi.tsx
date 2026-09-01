@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card, CardHeader } from '@/components/Card';
+import { PressableScale } from '@/components/anim/PressableScale';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { palette, radius, spacing } from '@/constants/theme';
 import type { ReportPeriod } from '@/data/mockReports';
@@ -67,9 +68,9 @@ export default function LabaRugiScreen() {
         </View>
       }
       headerRight={
-        <Pressable style={styles.exportBtn}>
+        <PressableScale style={styles.exportBtn}>
           <Text style={styles.exportText}>🖨 Cetak PDF</Text>
-        </Pressable>
+        </PressableScale>
       }
     >
       {/* PERIOD FILTER */}
@@ -80,13 +81,13 @@ export default function LabaRugiScreen() {
             {PERIOD_TABS.map((t) => {
               const active = period === t.key;
               return (
-                <Pressable
+                <PressableScale
                   key={t.key}
                   onPress={() => setPeriod(t.key)}
                   style={[styles.periodTab, active && styles.periodTabActive]}
                 >
                   <Text style={[styles.periodTabText, active && { color: palette.white }]}>{t.label}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -159,9 +160,9 @@ export default function LabaRugiScreen() {
                   <Text style={styles.expenseCat}>{e.category}</Text>
                 </View>
                 <Text style={styles.expenseAmount}>{formatRupiah(e.amount)}</Text>
-                <Pressable onPress={() => removeExpense(e.id)} style={styles.removeBtn}>
+                <PressableScale onPress={() => removeExpense(e.id)} style={styles.removeBtn}>
                   <Text style={styles.removeText}>✕</Text>
-                </Pressable>
+                </PressableScale>
               </View>
             ))}
           </View>
@@ -184,9 +185,9 @@ export default function LabaRugiScreen() {
               keyboardType="numeric"
               inputMode="numeric"
             />
-            <Pressable style={styles.addBtn} onPress={handleAdd}>
+            <PressableScale style={styles.addBtn} onPress={handleAdd}>
               <Text style={styles.addBtnText}>+ Tambah</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </Card>
       </View>

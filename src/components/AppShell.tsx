@@ -6,6 +6,7 @@ import { Brand } from '@/components/Brand';
 import { NotifButton } from '@/components/NotifButton';
 import { Sidebar } from '@/components/Sidebar';
 import { UserPill } from '@/components/UserPill';
+import { Reveal } from '@/components/anim/Reveal';
 import { useAuthStore } from '@/store/useAuthStore';
 
 const roleLabel: Record<string, string> = {
@@ -38,7 +39,7 @@ export function AppShell({ headerCenter, headerRight, children, scroll = true }:
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       {/* TOP BAR */}
-      <View style={styles.topbar}>
+      <Reveal style={styles.topbar} offset={-8} duration={320}>
         <Brand />
         <View style={styles.center}>{headerCenter}</View>
         {headerRight}
@@ -49,7 +50,7 @@ export function AppShell({ headerCenter, headerRight, children, scroll = true }:
           avatar={user?.avatar ?? '👤'}
           onPress={signOut}
         />
-      </View>
+      </Reveal>
 
       {/* BODY */}
       <View style={styles.body}>

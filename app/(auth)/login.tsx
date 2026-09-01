@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -11,6 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette, radius, spacing } from '@/constants/theme';
+import { Reveal } from '@/components/anim/Reveal';
+import { PressableScale } from '@/components/anim/PressableScale';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -35,7 +36,7 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
       >
-        <View style={styles.card}>
+        <Reveal style={styles.card} offset={18} duration={460}>
           <View style={styles.logoDot} />
           <Text style={styles.brand}>TOKO SAYURAN</Text>
           <Text style={styles.title}>Masuk ke POS</Text>
@@ -65,7 +66,7 @@ export default function LoginScreen() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <Pressable
+          <PressableScale
             style={[styles.button, loading && { opacity: 0.7 }]}
             onPress={handleLogin}
             disabled={loading}
@@ -75,7 +76,7 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>Masuk</Text>
             )}
-          </Pressable>
+          </PressableScale>
 
           {!isSupabaseConfigured ? (
             <Text style={styles.demoNote}>
@@ -83,7 +84,7 @@ export default function LoginScreen() {
               kredensial apa pun untuk melanjutkan.
             </Text>
           ) : null}
-        </View>
+        </Reveal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

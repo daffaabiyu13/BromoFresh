@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { palette, radius } from '@/constants/theme';
+import { PressableScale } from '@/components/anim/PressableScale';
 
 interface Props {
   name: string;
@@ -11,7 +12,7 @@ interface Props {
 /** Kartu kecil identitas pengguna di pojok kanan top bar. */
 export function UserPill({ name, role, avatar, onPress }: Props) {
   return (
-    <Pressable style={styles.pill} onPress={onPress}>
+    <PressableScale style={styles.pill} onPress={onPress}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{avatar}</Text>
       </View>
@@ -19,7 +20,7 @@ export function UserPill({ name, role, avatar, onPress }: Props) {
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.role}>{role}</Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

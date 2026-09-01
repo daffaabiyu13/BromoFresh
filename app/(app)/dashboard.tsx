@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card, CardHeader } from '@/components/Card';
+import { PressableScale } from '@/components/anim/PressableScale';
+import { useReveal } from '@/components/anim/useReveal';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
@@ -36,32 +38,32 @@ export default function DashboardScreen() {
       headerCenter={
         <View style={styles.periodWrap}>
           {PERIODS.map((p) => (
-            <Pressable
+            <PressableScale
               key={p}
               onPress={() => setPeriod(p)}
               style={[styles.periodBtn, period === p && styles.periodBtnActive]}
             >
               <Text style={[styles.periodText, period === p && styles.periodTextActive]}>{p}</Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </View>
       }
       headerRight={
-        <Pressable style={styles.exportBtn}>
+        <PressableScale style={styles.exportBtn}>
           <Text style={styles.exportText}>⬇ Export</Text>
-        </Pressable>
+        </PressableScale>
       }
     >
       {/* KPI ROW */}
       <View style={styles.kpiRow}>
-        {dashboardKpis.map((kpi) => (
-          <KpiCard key={kpi.key} kpi={kpi} />
+        {dashboardKpis.map((kpi, i) => (
+          <KpiCard key={kpi.key} kpi={kpi} delay={i * 55} />
         ))}
       </View>
 
       {/* CHARTS ROW */}
       <View style={styles.chartsRow}>
-        <Card style={styles.flex2}>
+        <Card style={styles.flex2} delay={240}>
           <CardHeader title="Statistik Penjualan" subtitle="Omset per kategori 7 hari terakhir" />
           <StackedBarChart
             labels={weeklySales.labels}
@@ -74,7 +76,7 @@ export default function DashboardScreen() {
           />
         </Card>
 
-        <Card style={styles.flex1}>
+        <Card style={styles.flex1} delay={300}>
           <CardHeader title="Per Kategori" subtitle="Kontribusi omset hari ini" />
           <View style={styles.donutWrap}>
             <DonutChart data={categoryContribution.map((c) => ({ value: c.pct, color: c.color }))} />
@@ -100,7 +102,7 @@ export default function DashboardScreen() {
 
       {/* MIDDLE ROW */}
       <View style={styles.chartsRow}>
-        <Card style={styles.flex1}>
+        <Card style={styles.flex1} delay={360}>
           <CardHeader title="Produk Terlaris" subtitle="Top 5 hari ini berdasarkan omset" />
           <View style={{ gap: 8 }}>
             {topProducts.map((p) => (
@@ -117,7 +119,7 @@ export default function DashboardScreen() {
           </View>
         </Card>
 
-        <Card style={styles.flex1}>
+        <Card style={styles.flex1} delay={420}>
           <CardHeader title="Peringatan Stok" subtitle="4 produk perlu perhatian" />
           <View style={{ gap: 8 }}>
             {stockAlerts.map((a) => {
@@ -140,9 +142,9 @@ export default function DashboardScreen() {
                       {a.remaining} · {a.min}
                     </Text>
                   </View>
-                  <Pressable style={[styles.restockBtn, { backgroundColor: critical ? palette.coral : palette.amber }]}>
+                  <PressableScale style={[styles.restockBtn, { backgroundColor: critical ? palette.coral : palette.amber }]}>
                     <Text style={styles.restockText}>Restock</Text>
-                  </Pressable>
+                  </PressableScale>
                 </View>
               );
             })}
@@ -151,7 +153,7 @@ export default function DashboardScreen() {
       </View>
 
       {/* TRANSACTIONS TABLE */}
-      <Card>
+      <Card delay={480}>
         <CardHeader title="Transaksi Terbaru" subtitle="5 transaksi terakhir hari ini" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View>
@@ -173,15 +175,16 @@ export default function DashboardScreen() {
   );
 }
 
-function KpiCard({ kpi }: { kpi: Kpi }) {
+function KpiCard({ kpi, delay = 0 }: { kpi: Kpi; delay?: number }) {
   const featured = kpi.featured;
+  const anim = useReveal({ delay });
   const dirColor =
     kpi.changeDir === 'up' ? palette.g700 : kpi.changeDir === 'down' ? palette.coral : palette.amber;
   const dirBg =
     kpi.changeDir === 'up' ? palette.g50 : kpi.changeDir === 'down' ? palette.coralLight : palette.amberLight;
 
   return (
-    <View style={[styles.kpiCard, featured && styles.kpiFeatured]}>
+    <Animated.View style={[styles.kpiCard, featured && styles.kpiFeatured, anim]}>
       <View style={styles.kpiEyebrowRow}>
         <Text style={[styles.kpiEyebrow, featured && { color: 'rgba(255,255,255,0.7)' }]}>{kpi.label}</Text>
         <Text style={styles.kpiIcon}>{kpi.icon}</Text>
@@ -197,7 +200,7 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
         ) : null}
         <Text style={[styles.kpiCompare, featured && { color: 'rgba(255,255,255,0.6)' }]}>{kpi.compare}</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
