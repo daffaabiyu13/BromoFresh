@@ -8,12 +8,9 @@ import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import {
-  categoryContribution,
-  dashboardKpis,
+  dashboardByPeriod,
   recentTransactions,
   stockAlerts,
-  topProducts,
-  weeklySales,
   type Kpi,
 } from '@/data/mockDashboard';
 import { formatRupiah } from '@/utils/format';
@@ -27,6 +24,8 @@ const PERIODS = ['Hari', 'Minggu', 'Bulan', 'Tahun'] as const;
 
 export default function DashboardScreen() {
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>('Minggu');
+  // Data (KPI, grafik, kontribusi, produk terlaris) mengikuti periode terpilih.
+  const view = dashboardByPeriod[period];
   const recorded = useTransactionStore((s) => s.transactions);
   const { data: dbTransactions = [] } = useTransactions();
   // Sumber transaksi: Supabase bila terhubung, jika tidak riwayat lokal.
@@ -67,7 +66,7 @@ export default function DashboardScreen() {
     >
       {/* KPI ROW */}
       <View style={styles.kpiRow}>
-        {dashboardKpis.map((kpi, i) => (
+        {view.kpis.map((kpi, i) => (
           <KpiCard key={kpi.key} kpi={kpi} delay={i * 55} />
         ))}
       </View>
@@ -75,29 +74,29 @@ export default function DashboardScreen() {
       {/* CHARTS ROW */}
       <View style={styles.chartsRow}>
         <Card style={styles.flex2} delay={240}>
-          <CardHeader title="Statistik Penjualan" subtitle="Omset per kategori 7 hari terakhir" />
+          <CardHeader title="Statistik Penjualan" subtitle={view.salesSubtitle} />
           <StackedBarChart
-            labels={weeklySales.labels}
+            labels={view.sales.labels}
             series={[
-              { label: 'Sayur', data: weeklySales.sayur, color: categoryColors.sayur },
-              { label: 'Buah', data: weeklySales.buah, color: categoryColors.buah },
-              { label: 'Sembako', data: weeklySales.sembako, color: categoryColors.sembako },
-              { label: 'Frozen', data: weeklySales.frozen, color: categoryColors.frozen },
+              { label: 'Sayur', data: view.sales.sayur, color: categoryColors.sayur },
+              { label: 'Buah', data: view.sales.buah, color: categoryColors.buah },
+              { label: 'Sembako', data: view.sales.sembako, color: categoryColors.sembako },
+              { label: 'Frozen', data: view.sales.frozen, color: categoryColors.frozen },
             ]}
           />
         </Card>
 
         <Card style={styles.flex1} delay={300}>
-          <CardHeader title="Per Kategori" subtitle="Kontribusi omset hari ini" />
+          <CardHeader title="Per Kategori" subtitle={view.contribSubtitle} />
           <View style={styles.donutWrap}>
-            <DonutChart data={categoryContribution.map((c) => ({ value: c.pct, color: c.color }))} />
+            <DonutChart data={view.contribution.map((c) => ({ value: c.pct, color: c.color }))} />
             <View style={styles.donutCenter} pointerEvents="none">
               <Text style={styles.donutVal}>100%</Text>
-              <Text style={styles.donutLabel}>Total Hari Ini</Text>
+              <Text style={styles.donutLabel}>{view.donutLabel}</Text>
             </View>
           </View>
           <View style={{ gap: 7 }}>
-            {categoryContribution.map((c) => (
+            {view.contribution.map((c) => (
               <View key={c.key} style={styles.legendRow}>
                 <View style={[styles.legendDot, { backgroundColor: c.color }]} />
                 <Text style={styles.legendName}>{c.label}</Text>
@@ -114,9 +113,9 @@ export default function DashboardScreen() {
       {/* MIDDLE ROW */}
       <View style={styles.chartsRow}>
         <Card style={styles.flex1} delay={360}>
-          <CardHeader title="Produk Terlaris" subtitle="Top 5 hari ini berdasarkan omset" />
+          <CardHeader title="Produk Terlaris" subtitle={view.topSubtitle} />
           <View style={{ gap: 8 }}>
-            {topProducts.map((p) => (
+            {view.topProducts.map((p) => (
               <View key={p.rank} style={styles.rankItem}>
                 <Text style={styles.rankNum}>{String(p.rank).padStart(2, '0')}</Text>
                 <Text style={styles.rankEmoji}>{p.emoji}</Text>
