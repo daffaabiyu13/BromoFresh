@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card, CardHeader } from '@/components/Card';
+import { PressableScale } from '@/components/anim/PressableScale';
 import { palette, radius } from '@/constants/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useSettingsStore, type PaperSize, type ThemePref } from '@/store/useSettingsStore';
@@ -30,9 +31,9 @@ export default function PengaturanScreen() {
         </View>
       }
       headerRight={
-        <Pressable style={styles.resetBtn} onPress={s.reset}>
+        <PressableScale style={styles.resetBtn} onPress={s.reset}>
           <Text style={styles.resetText}>Reset</Text>
-        </Pressable>
+        </PressableScale>
       }
     >
       <View style={styles.grid}>
@@ -81,9 +82,9 @@ export default function PengaturanScreen() {
               {(['58', '80'] as PaperSize[]).map((size) => {
                 const active = s.paperSize === size;
                 return (
-                  <Pressable key={size} onPress={() => s.update('paperSize', size)} style={[styles.segBtn, active && styles.segBtnActive]}>
+                  <PressableScale key={size} onPress={() => s.update('paperSize', size)} style={[styles.segBtn, active && styles.segBtnActive]}>
                     <Text style={[styles.segText, active && { color: palette.white }]}>{size}mm</Text>
-                  </Pressable>
+                  </PressableScale>
                 );
               })}
             </View>
@@ -107,11 +108,11 @@ export default function PengaturanScreen() {
               {(['terang', 'gelap', 'sistem'] as ThemePref[]).map((t) => {
                 const active = s.theme === t;
                 return (
-                  <Pressable key={t} onPress={() => s.update('theme', t)} style={[styles.segBtn, active && styles.segBtnActive]}>
+                  <PressableScale key={t} onPress={() => s.update('theme', t)} style={[styles.segBtn, active && styles.segBtnActive]}>
                     <Text style={[styles.segText, active && { color: palette.white }]}>
                       {t === 'terang' ? 'Terang' : t === 'gelap' ? 'Gelap' : 'Sistem'}
                     </Text>
-                  </Pressable>
+                  </PressableScale>
                 );
               })}
             </View>

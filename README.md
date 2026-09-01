@@ -162,6 +162,19 @@ Semua warna, radius, dan tipografi diambil dari mockup dan disatukan di
 Sayuran"). Layar responsif: sidebar muncul pada lebar ≥ 900px (web/tablet),
 dan panel kasir menumpuk vertikal pada layar sempit.
 
+### ✨ Animasi
+
+Transisi halus disatukan lewat dua primitif ringan di `src/components/anim/`
+(memakai `Animated` bawaan React Native — mulus di web maupun HP):
+
+- **`useReveal` / `Reveal`** — animasi masuk (fade + slide-up) tiap seksi.
+  Dipakai otomatis oleh komponen `Card`, sehingga setiap kartu di seluruh modul
+  muncul berurutan (stagger) saat layar dibuka; top bar dan item sidebar pun
+  meluncur masuk, dan item keranjang kasir beranimasi saat ditambahkan.
+- **`PressableScale`** — umpan balik skala (spring) saat tombol/kartu ditekan,
+  menggantikan `Pressable` biasa di seluruh kontrol interaktif (menu, pil filter,
+  kartu produk, stepper stok, tombol bayar, dll).
+
 ---
 
 _Dihasilkan dari PRD & mockup Sayuran POS · Fase 1 (MVP) scaffolding._

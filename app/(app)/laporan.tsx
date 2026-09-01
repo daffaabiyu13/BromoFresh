@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card, CardHeader } from '@/components/Card';
+import { PressableScale } from '@/components/anim/PressableScale';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import { generateTransactions, periodData, type ReportPeriod } from '@/data/mockReports';
@@ -83,12 +84,12 @@ export default function LaporanScreen() {
       }
       headerRight={
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Pressable style={styles.exportBtn}>
+          <PressableScale style={styles.exportBtn}>
             <Text style={styles.exportText}>⬇ Export CSV</Text>
-          </Pressable>
-          <Pressable style={[styles.exportBtn, styles.exportPrimary]}>
+          </PressableScale>
+          <PressableScale style={[styles.exportBtn, styles.exportPrimary]}>
             <Text style={[styles.exportText, { color: palette.white }]}>🖨 Cetak PDF</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       }
     >
@@ -100,13 +101,13 @@ export default function LaporanScreen() {
             {PERIOD_TABS.map((t) => {
               const active = period === t.key;
               return (
-                <Pressable
+                <PressableScale
                   key={t.key}
                   onPress={() => { setPeriod(t.key); setPage(1); }}
                   style={[styles.periodTab, active && styles.periodTabActive]}
                 >
                   <Text style={[styles.periodTabText, active && { color: palette.white }]}>{t.label}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -115,13 +116,13 @@ export default function LaporanScreen() {
             {CAT_PILLS.map((c) => {
               const active = catFilter === c;
               return (
-                <Pressable
+                <PressableScale
                   key={c}
                   onPress={() => setCatFilter(c)}
                   style={[styles.catPill, active && styles.catPillActive]}
                 >
                   <Text style={[styles.catPillText, active && { color: palette.g700 }]}>{c}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -153,7 +154,7 @@ export default function LaporanScreen() {
             right={
               <View style={styles.toggle}>
                 {(['bar', 'line'] as const).map((v) => (
-                  <Pressable
+                  <PressableScale
                     key={v}
                     onPress={() => setChartView(v)}
                     style={[styles.toggleBtn, chartView === v && styles.toggleBtnActive]}
@@ -161,7 +162,7 @@ export default function LaporanScreen() {
                     <Text style={[styles.toggleText, chartView === v && { color: palette.text }]}>
                       {v === 'bar' ? 'Bar' : 'Line'}
                     </Text>
-                  </Pressable>
+                  </PressableScale>
                 ))}
               </View>
             }
@@ -239,13 +240,13 @@ export default function LaporanScreen() {
           <View style={{ flex: 1 }} />
           <View style={{ flexDirection: 'row', gap: 4 }}>
             {Array.from({ length: pages }, (_, i) => i + 1).slice(0, 6).map((p) => (
-              <Pressable
+              <PressableScale
                 key={p}
                 onPress={() => setPage(p)}
                 style={[styles.pgBtn, p === currentPage && styles.pgBtnActive]}
               >
                 <Text style={[styles.pgText, p === currentPage && { color: palette.white }]}>{p}</Text>
-              </Pressable>
+              </PressableScale>
             ))}
           </View>
         </View>

@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppShell } from '@/components/AppShell';
 import { Card } from '@/components/Card';
+import { PressableScale } from '@/components/anim/PressableScale';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import type { StockRow, StockStatus } from '@/data/mockStock';
 import {
@@ -138,12 +139,12 @@ export default function StokScreen() {
         </View>
       }
       headerRight={
-        <Pressable
+        <PressableScale
           style={styles.addProductBtn}
           onPress={() => (showForm ? closeForm() : (setEditing(null), setForm(EMPTY_FORM), setShowForm(true)))}
         >
           <Text style={styles.addProductText}>{showForm ? '✕ Tutup' : '＋ Tambah Produk'}</Text>
-        </Pressable>
+        </PressableScale>
       }
     >
       {/* SUMMARY */}
@@ -161,13 +162,13 @@ export default function StokScreen() {
             {FILTERS.map((f) => {
               const active = filter === f.key;
               return (
-                <Pressable
+                <PressableScale
                   key={f.key}
                   onPress={() => setFilter(f.key)}
                   style={[styles.pill, active && styles.pillActive]}
                 >
                   <Text style={[styles.pillText, active && { color: palette.g700 }]}>{f.label}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -265,19 +266,19 @@ export default function StokScreen() {
             {CATEGORY_OPTIONS.map((c) => {
               const active = form.category === c.key;
               return (
-                <Pressable
+                <PressableScale
                   key={c.key}
                   onPress={() => setForm((f) => ({ ...f, category: c.key }))}
                   style={[styles.catPick, active && styles.catPickActive]}
                 >
                   <Text style={[styles.catPickText, active && { color: palette.g700 }]}>{c.label}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
 
           <View style={styles.formActions}>
-            <Pressable
+            <PressableScale
               style={[styles.saveBtn, (!canSubmit || isSaving) && styles.saveBtnDisabled]}
               onPress={submitForm}
               disabled={!canSubmit || isSaving}
@@ -285,10 +286,10 @@ export default function StokScreen() {
               <Text style={styles.saveText}>
                 {isSaving ? 'Menyimpan…' : editing ? 'Simpan Perubahan' : 'Simpan Produk'}
               </Text>
-            </Pressable>
-            <Pressable style={styles.cancelBtn} onPress={closeForm}>
+            </PressableScale>
+            <PressableScale style={styles.cancelBtn} onPress={closeForm}>
               <Text style={styles.cancelText}>Batal</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </Card>
       ) : null}
@@ -405,22 +406,22 @@ function StockTableRow({
         </View>
       </View>
       <View style={[styles.td, C.aksi, styles.aksiCell]}>
-        <Pressable
+        <PressableScale
           style={[styles.stepBtn, row.stock <= 0 && styles.stepBtnDisabled]}
           onPress={() => onAdjust(-1)}
           disabled={row.stock <= 0}
         >
           <Text style={styles.stepText}>−</Text>
-        </Pressable>
-        <Pressable style={styles.stepBtn} onPress={() => onAdjust(1)}>
+        </PressableScale>
+        <PressableScale style={styles.stepBtn} onPress={() => onAdjust(1)}>
           <Text style={styles.stepText}>+</Text>
-        </Pressable>
-        <Pressable style={styles.editBtn} onPress={onEdit}>
+        </PressableScale>
+        <PressableScale style={styles.editBtn} onPress={onEdit}>
           <Text style={styles.editText}>✏️</Text>
-        </Pressable>
-        <Pressable style={styles.deleteBtn} onPress={onDelete}>
+        </PressableScale>
+        <PressableScale style={styles.deleteBtn} onPress={onDelete}>
           <Text style={styles.deleteText}>🗑</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );

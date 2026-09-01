@@ -2,6 +2,8 @@ import { Link, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { palette, radius } from '@/constants/theme';
 import { criticalCount } from '@/data/mockStock';
+import { Reveal } from '@/components/anim/Reveal';
+import { PressableScale } from '@/components/anim/PressableScale';
 
 interface NavItem {
   label: string;
@@ -29,6 +31,7 @@ const NAV: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const groups: NavItem['group'][] = ['Menu', 'Manajemen'];
+  let order = 0; // indeks global untuk stagger animasi antar-item
 
   return (
     <View style={styles.sidebar}>
@@ -37,6 +40,7 @@ export function Sidebar() {
           <Text style={styles.groupLabel}>{group}</Text>
           {NAV.filter((n) => n.group === group).map((item) => {
             const active = item.href ? pathname === item.href : false;
+            const delay = 60 + order++ * 45;
             const content = (
               <View style={[styles.item, active && styles.itemActive]}>
                 <Text style={styles.icon}>{item.icon}</Text>
@@ -54,15 +58,19 @@ export function Sidebar() {
 
             if (!item.href) {
               return (
-                <Pressable key={item.label} disabled style={{ opacity: 0.55 }}>
-                  {content}
-                </Pressable>
+                <Reveal key={item.label} delay={delay} offset={6}>
+                  <Pressable disabled style={{ opacity: 0.55 }}>
+                    {content}
+                  </Pressable>
+                </Reveal>
               );
             }
             return (
-              <Link key={item.label} href={item.href} asChild>
-                <Pressable>{content}</Pressable>
-              </Link>
+              <Reveal key={item.label} delay={delay} offset={6}>
+                <Link href={item.href} asChild>
+                  <PressableScale activeScale={0.97}>{content}</PressableScale>
+                </Link>
+              </Reveal>
             );
           })}
         </View>

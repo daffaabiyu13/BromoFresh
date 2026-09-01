@@ -1,13 +1,14 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { palette, radius } from '@/constants/theme';
+import { PressableScale } from '@/components/anim/PressableScale';
 
 /** Tombol lonceng notifikasi dengan titik merah penanda. */
 export function NotifButton({ onPress, hasDot = true }: { onPress?: () => void; hasDot?: boolean }) {
   return (
-    <Pressable style={styles.btn} onPress={onPress}>
+    <PressableScale style={styles.btn} onPress={onPress}>
       <Text style={styles.bell}>🔔</Text>
       {hasDot ? <View style={styles.dot} /> : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 

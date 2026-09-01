@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +13,9 @@ import { useRouter } from 'expo-router';
 import { Brand } from '@/components/Brand';
 import { NotifButton } from '@/components/NotifButton';
 import { UserPill } from '@/components/UserPill';
+import { PressableScale } from '@/components/anim/PressableScale';
+import { Reveal } from '@/components/anim/Reveal';
+import { useReveal } from '@/components/anim/useReveal';
 import { categories } from '@/data/products';
 import { palette, radius, spacing } from '@/constants/theme';
 import { formatRupiah, formatReceiptNumber, formatTanggalId } from '@/utils/format';
@@ -108,9 +110,9 @@ export default function KasirScreen() {
         <Text style={styles.txCount}>
           Total: <Text style={{ color: palette.text, fontWeight: '600' }}>{txCount}</Text> Transaksi
         </Text>
-        <Pressable style={styles.laporanBtn} onPress={() => router.push('/laporan')}>
+        <PressableScale style={styles.laporanBtn} onPress={() => router.push('/laporan')}>
           <Text style={styles.laporanText}>▤ Laporan</Text>
-        </Pressable>
+        </PressableScale>
         <NotifButton />
         <UserPill
           name={user?.name ?? 'Kasir'}
@@ -138,8 +140,9 @@ export default function KasirScreen() {
               const active = c.key === category;
               const restock = c.status === 'restock';
               return (
-                <Pressable
+                <PressableScale
                   key={c.key}
+                  activeScale={0.97}
                   onPress={() => setCategory(c.key)}
                   style={[
                     styles.catCard,
@@ -170,7 +173,7 @@ export default function KasirScreen() {
                   <Text style={[styles.catCount, active && { color: 'rgba(255,255,255,0.65)' }]}>
                     {categoryCounts[c.key]} produk
                   </Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -182,8 +185,15 @@ export default function KasirScreen() {
             ) : filtered.length === 0 ? (
               <Text style={styles.gridHint}>Tidak ada produk pada kategori ini.</Text>
             ) : (
-              filtered.map((p) => (
-                <ProductCard key={p.id} product={p} qty={qtyOf(p.id)} onAdd={() => addItem(p)} wide={wide} />
+              filtered.map((p, i) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  qty={qtyOf(p.id)}
+                  onAdd={() => addItem(p)}
+                  wide={wide}
+                  delay={Math.min(i, 12) * 35}
+                />
               ))
             )}
           </ScrollView>
@@ -206,13 +216,14 @@ export default function KasirScreen() {
             {PAYMENT_TABS.map((t) => {
               const active = paymentMethod === t.key;
               return (
-                <Pressable
+                <PressableScale
                   key={t.key}
+                  activeScale={0.95}
                   onPress={() => setPaymentMethod(t.key)}
                   style={[styles.payTab, active && styles.payTabActive]}
                 >
                   <Text style={[styles.payTabText, active && { color: palette.white }]}>{t.label}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -248,7 +259,7 @@ export default function KasirScreen() {
                 </View>
               ) : (
                 items.map((item) => (
-                  <View key={item.id} style={styles.orderItem}>
+                  <Reveal key={item.id} offset={8} duration={300} style={styles.orderItem}>
                     <View style={styles.orderItemEmoji}>
                       <Text style={{ fontSize: 20 }}>{item.emoji}</Text>
                     </View>
@@ -258,17 +269,17 @@ export default function KasirScreen() {
                         {formatRupiah(item.price)} × {item.qty} {item.unit}
                       </Text>
                       <View style={styles.qtyControls}>
-                        <Pressable style={styles.qtyBtn} onPress={() => changeQty(item.id, -1)}>
+                        <PressableScale activeScale={0.88} style={styles.qtyBtn} onPress={() => changeQty(item.id, -1)}>
                           <Text style={styles.qtyBtnText}>−</Text>
-                        </Pressable>
+                        </PressableScale>
                         <Text style={styles.qtyNum}>{item.qty}</Text>
-                        <Pressable style={styles.qtyBtn} onPress={() => changeQty(item.id, 1)}>
+                        <PressableScale activeScale={0.88} style={styles.qtyBtn} onPress={() => changeQty(item.id, 1)}>
                           <Text style={styles.qtyBtnText}>+</Text>
-                        </Pressable>
+                        </PressableScale>
                       </View>
                     </View>
                     <Text style={styles.orderItemPrice}>{formatRupiah(item.price * item.qty)}</Text>
-                  </View>
+                  </Reveal>
                 ))
               )}
             </ScrollView>
@@ -293,7 +304,7 @@ export default function KasirScreen() {
           </View>
 
           {/* CTA */}
-          <Pressable
+          <PressableScale
             style={[styles.cta, subtotal === 0 && styles.ctaDisabled]}
             onPress={handlePlaceOrder}
             disabled={subtotal === 0}
@@ -305,7 +316,7 @@ export default function KasirScreen() {
               <Text style={styles.ctaText}>Bayar Sekarang</Text>
               <Text style={styles.ctaTotal}>{formatRupiah(subtotal)}</Text>
             </View>
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
 
@@ -322,15 +333,20 @@ function ProductCard({
   qty,
   onAdd,
   wide,
+  delay = 0,
 }: {
   product: Product;
   qty: number;
   onAdd: () => void;
   wide: boolean;
+  delay?: number;
 }) {
   const inCart = qty > 0;
+  const anim = useReveal({ delay, offset: 8 });
   return (
-    <View style={[styles.prodCard, { width: wide ? '23.5%' : '48%' }, inCart && { borderColor: palette.g900 }]}>
+    <Animated.View
+      style={[styles.prodCard, { width: wide ? '23.5%' : '48%' }, inCart && { borderColor: palette.g900 }, anim]}
+    >
       {inCart ? (
         <View style={styles.qtyBadge}>
           <Text style={styles.qtyBadgeText}>{qty}</Text>
@@ -347,11 +363,15 @@ function ProductCard({
             <Text style={styles.prodUnit}> /{product.unit}</Text>
           </Text>
         </View>
-        <Pressable style={[styles.addBtn, inCart && { backgroundColor: palette.g900 }]} onPress={onAdd}>
+        <PressableScale
+          activeScale={0.85}
+          style={[styles.addBtn, inCart && { backgroundColor: palette.g900 }]}
+          onPress={onAdd}
+        >
           <Text style={[styles.addBtnText, inCart && { color: palette.white }]}>＋</Text>
-        </Pressable>
+        </PressableScale>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
