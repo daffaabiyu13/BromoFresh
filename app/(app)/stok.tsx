@@ -4,7 +4,13 @@ import { AppShell } from '@/components/AppShell';
 import { Card } from '@/components/Card';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import type { StockRow, StockStatus } from '@/data/mockStock';
-import { useAddProduct, useDeleteProduct, useStockAdjust, useStockProducts } from '@/lib/queries';
+import {
+  useAddProduct,
+  useDeleteProduct,
+  useStockAdjust,
+  useStockProducts,
+  useUpdateProduct,
+} from '@/lib/queries';
 import { formatRupiah } from '@/utils/format';
 import type { CategoryKey } from '@/types';
 
@@ -50,35 +56,59 @@ export default function StokScreen() {
   const { data: rows = [] } = useStockProducts();
   const adjust = useStockAdjust();
   const addProduct = useAddProduct();
+  const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
 
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<{ id: number; uuid?: string } | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
 
   const canSubmit = form.name.trim().length > 0 && toInt(form.sellPrice) > 0;
+  const isSaving = addProduct.isPending || updateProduct.isPending;
 
-  function submitProduct() {
-    if (!canSubmit || addProduct.isPending) return;
-    addProduct.mutate(
-      {
-        name: form.name.trim(),
-        category: form.category,
-        unit: form.unit.trim() || 'pcs',
-        sellPrice: toInt(form.sellPrice),
-        costPrice: toInt(form.costPrice),
-        stock: toInt(form.stock),
-        minStock: toInt(form.minStock),
-        emoji: form.emoji.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          setForm(EMPTY_FORM);
-          setShowForm(false);
-        },
-      },
-    );
+  function closeForm() {
+    setForm(EMPTY_FORM);
+    setEditing(null);
+    setShowForm(false);
+  }
+
+  function startEdit(row: StockRow) {
+    setEditing({ id: row.id, uuid: row.uuid });
+    setForm({
+      name: row.name,
+      category: row.category,
+      unit: row.unit,
+      sellPrice: String(row.price),
+      costPrice: String(row.costPrice),
+      stock: String(row.stock),
+      minStock: String(row.minStock),
+      emoji: row.emoji,
+    });
+    setShowForm(true);
+  }
+
+  function submitForm() {
+    if (!canSubmit || isSaving) return;
+    const payload = {
+      name: form.name.trim(),
+      category: form.category,
+      unit: form.unit.trim() || 'pcs',
+      sellPrice: toInt(form.sellPrice),
+      costPrice: toInt(form.costPrice),
+      stock: toInt(form.stock),
+      minStock: toInt(form.minStock),
+      emoji: form.emoji.trim() || undefined,
+    };
+    if (editing) {
+      updateProduct.mutate(
+        { id: editing.id, uuid: editing.uuid, ...payload },
+        { onSuccess: closeForm },
+      );
+    } else {
+      addProduct.mutate(payload, { onSuccess: closeForm });
+    }
   }
 
   const summary = useMemo(() => {
@@ -108,7 +138,10 @@ export default function StokScreen() {
         </View>
       }
       headerRight={
-        <Pressable style={styles.addProductBtn} onPress={() => setShowForm((v) => !v)}>
+        <Pressable
+          style={styles.addProductBtn}
+          onPress={() => (showForm ? closeForm() : (setEditing(null), setForm(EMPTY_FORM), setShowForm(true)))}
+        >
           <Text style={styles.addProductText}>{showForm ? '✕ Tutup' : '＋ Tambah Produk'}</Text>
         </Pressable>
       }
@@ -152,7 +185,7 @@ export default function StokScreen() {
       {/* FORM TAMBAH PRODUK */}
       {showForm ? (
         <Card>
-          <Text style={styles.formTitle}>Tambah Produk Baru</Text>
+          <Text style={styles.formTitle}>{editing ? 'Edit Produk' : 'Tambah Produk Baru'}</Text>
           <View style={styles.formGrid}>
             <FormField label="Nama Produk" wide>
               <TextInput
@@ -245,13 +278,15 @@ export default function StokScreen() {
 
           <View style={styles.formActions}>
             <Pressable
-              style={[styles.saveBtn, !canSubmit && styles.saveBtnDisabled]}
-              onPress={submitProduct}
-              disabled={!canSubmit || addProduct.isPending}
+              style={[styles.saveBtn, (!canSubmit || isSaving) && styles.saveBtnDisabled]}
+              onPress={submitForm}
+              disabled={!canSubmit || isSaving}
             >
-              <Text style={styles.saveText}>{addProduct.isPending ? 'Menyimpan…' : 'Simpan Produk'}</Text>
+              <Text style={styles.saveText}>
+                {isSaving ? 'Menyimpan…' : editing ? 'Simpan Perubahan' : 'Simpan Produk'}
+              </Text>
             </Pressable>
-            <Pressable style={styles.cancelBtn} onPress={() => { setForm(EMPTY_FORM); setShowForm(false); }}>
+            <Pressable style={styles.cancelBtn} onPress={closeForm}>
               <Text style={styles.cancelText}>Batal</Text>
             </Pressable>
           </View>
@@ -278,6 +313,7 @@ export default function StokScreen() {
                 onAdjust={(delta) =>
                   adjust.mutate({ id: row.id, uuid: row.uuid, delta, currentStock: row.stock })
                 }
+                onEdit={() => startEdit(row)}
                 onDelete={() => deleteProduct.mutate({ id: row.id, uuid: row.uuid })}
               />
             ))}
@@ -333,10 +369,12 @@ function FormField({ label, wide, children }: { label: string; wide?: boolean; c
 function StockTableRow({
   row,
   onAdjust,
+  onEdit,
   onDelete,
 }: {
   row: StockRow;
   onAdjust: (delta: number) => void;
+  onEdit: () => void;
   onDelete: () => void;
 }) {
   const s = STATUS_STYLE[row.status];
@@ -377,6 +415,9 @@ function StockTableRow({
         <Pressable style={styles.stepBtn} onPress={() => onAdjust(1)}>
           <Text style={styles.stepText}>+</Text>
         </Pressable>
+        <Pressable style={styles.editBtn} onPress={onEdit}>
+          <Text style={styles.editText}>✏️</Text>
+        </Pressable>
         <Pressable style={styles.deleteBtn} onPress={onDelete}>
           <Text style={styles.deleteText}>🗑</Text>
         </Pressable>
@@ -392,7 +433,7 @@ const C = {
   min: { width: 60 },
   hpp: { width: 110 },
   status: { width: 90 },
-  aksi: { width: 150 },
+  aksi: { width: 196 },
 } as const;
 
 const styles = StyleSheet.create({
@@ -476,6 +517,18 @@ const styles = StyleSheet.create({
   },
   stepBtnDisabled: { backgroundColor: '#B0C4BA' },
   stepText: { color: palette.white, fontSize: 18, fontWeight: '700', lineHeight: 20 },
+  editBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: palette.g50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 2,
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  editText: { fontSize: 13 },
   deleteBtn: {
     width: 30,
     height: 30,
