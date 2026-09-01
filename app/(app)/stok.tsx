@@ -4,7 +4,7 @@ import { AppShell } from '@/components/AppShell';
 import { Card } from '@/components/Card';
 import { categoryColors, palette, radius, spacing } from '@/constants/theme';
 import type { StockRow, StockStatus } from '@/data/mockStock';
-import { useRestock, useStockProducts } from '@/lib/queries';
+import { useStockAdjust, useStockProducts } from '@/lib/queries';
 import { formatRupiah } from '@/utils/format';
 import type { CategoryKey } from '@/types';
 
@@ -25,12 +25,10 @@ const STATUS_STYLE: Record<StockStatus, { bg: string; fg: string; label: string 
   aman: { bg: palette.g50, fg: palette.g700, label: 'Aman' },
 };
 
-const RESTOCK_QTY = 10;
-
 export default function StokScreen() {
   // Data stok dari Supabase (atau mock bila belum dikonfigurasi).
   const { data: rows = [] } = useStockProducts();
-  const restock = useRestock();
+  const adjust = useStockAdjust();
 
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
@@ -115,8 +113,8 @@ export default function StokScreen() {
               <StockTableRow
                 key={row.id}
                 row={row}
-                onRestock={() =>
-                  restock.mutate({ id: row.id, uuid: row.uuid, qty: RESTOCK_QTY, currentStock: row.stock })
+                onAdjust={(delta) =>
+                  adjust.mutate({ id: row.id, uuid: row.uuid, delta, currentStock: row.stock })
                 }
               />
             ))}
@@ -129,8 +127,8 @@ export default function StokScreen() {
         </ScrollView>
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Menampilkan {filtered.length} dari {rows.length} produk · tombol Restock menambah{' '}
-            {RESTOCK_QTY} unit
+            Menampilkan {filtered.length} dari {rows.length} produk · gunakan − / + untuk
+            menyesuaikan stok
           </Text>
         </View>
       </Card>
@@ -160,7 +158,7 @@ function SummaryCard({
   );
 }
 
-function StockTableRow({ row, onRestock }: { row: StockRow; onRestock: () => void }) {
+function StockTableRow({ row, onAdjust }: { row: StockRow; onAdjust: (delta: number) => void }) {
   const s = STATUS_STYLE[row.status];
   const catColor = categoryColors[row.category];
   return (
@@ -188,9 +186,16 @@ function StockTableRow({ row, onRestock }: { row: StockRow; onRestock: () => voi
           <Text style={[styles.badgeText, { color: s.fg }]}>{s.label}</Text>
         </View>
       </View>
-      <View style={[styles.td, C.aksi]}>
-        <Pressable style={styles.restockBtn} onPress={onRestock}>
-          <Text style={styles.restockText}>+ Restock</Text>
+      <View style={[styles.td, C.aksi, styles.aksiCell]}>
+        <Pressable
+          style={[styles.stepBtn, row.stock <= 0 && styles.stepBtnDisabled]}
+          onPress={() => onAdjust(-1)}
+          disabled={row.stock <= 0}
+        >
+          <Text style={styles.stepText}>−</Text>
+        </Pressable>
+        <Pressable style={styles.stepBtn} onPress={() => onAdjust(1)}>
+          <Text style={styles.stepText}>+</Text>
         </Pressable>
       </View>
     </View>
@@ -277,14 +282,17 @@ const styles = StyleSheet.create({
   stokNum: { fontWeight: '700' },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
   badgeText: { fontSize: 10, fontWeight: '700' },
-  restockBtn: {
+  aksiCell: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stepBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: palette.g900,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  restockText: { color: palette.white, fontSize: 11, fontWeight: '700' },
+  stepBtnDisabled: { backgroundColor: '#B0C4BA' },
+  stepText: { color: palette.white, fontSize: 18, fontWeight: '700', lineHeight: 20 },
   empty: { padding: 24, alignItems: 'center' },
   footer: { paddingHorizontal: 16, paddingVertical: 11, borderTopWidth: 1, borderTopColor: palette.border },
   footerText: { fontSize: 11, color: palette.muted },
